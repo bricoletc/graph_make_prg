@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(inc)
 
 add_executable(prg_msa
-    inc/msa_to_dfa.hpp
-    src/msa_to_dfa.cpp
+        src/MSA.cpp
+        src/FA.cpp
+        src/oneDepth_prg.cpp
     src/test_run.cpp)
