@@ -16,7 +16,7 @@ public:
 
 
 private:
-    std::ifstream fhandle;
+    std::ifstream handle;
     std::vector<int> seekg_starts;
     int offset;
     void find_starts();

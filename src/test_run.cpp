@@ -3,6 +3,7 @@
 #include "oneDepth_prg.hpp"
 #include <iostream>
 
+
 int main(){
 
     //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/AMA_Plasmodium.fasta");
@@ -10,6 +11,37 @@ int main(){
     //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/GC00001222_na_aln.fa");
      MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/nested.fasta");
 
+
+    FA fa = FA(msa);
+
+    auto prg = oneDepth_prg(fa.root);
+    std::cout << prg.prg << std::endl;
+
+    void deletion_above_snpAndIndel();
+    deletion_above_snpAndIndel();
+
+}
+
+#include <sstream>
+
+void deletion_above_snpAndIndel(){
+    std::string MSA_string = ">Rec1\n"
+                             "ACGTTA\n"
+                             ">Rec2\n"
+                             "ACC-TA\n"
+                             ">Rec3\n"
+                             "A----A\n"
+    ;
+    std::string test_DIR = "/home/brice/Desktop/git_repos/prg_msa/test_data/";
+
+
+    std::string tmp_file = test_DIR + "tmp.fasta";
+
+    std::ofstream tmp_out = std::ofstream(tmp_file);
+    tmp_out << MSA_string;
+    tmp_out.close();
+
+    MSA msa(tmp_file);
 
     FA fa = FA(msa);
 

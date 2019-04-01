@@ -34,7 +34,6 @@ oneDepth_prg::oneDepth_prg(auto_Node* root) {
             DFFS(cur_Node, alt, fixed_point); //populate var_region
             prg += serialise_var_region();
 
-            std::cout<<prg<<std::endl;
             num_var_sites++;
 
             cur_Node = fixed_point;
@@ -61,6 +60,9 @@ auto_Node *oneDepth_prg::find_fixed_point(auto_Node *cur_Node) {
     return cur_Node;
 }
 
+/**
+ * Depth-First Fixed-point bounded Search.
+ */
 void oneDepth_prg::DFFS(auto_Node *cur_Node, std::string alt, auto_Node *fixed_point) {
     for (auto node : cur_Node->next) {
         if (node == fixed_point){

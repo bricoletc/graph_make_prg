@@ -10,3 +10,9 @@ add_executable(prg_msa
         src/FA.cpp
         src/oneDepth_prg.cpp
     src/test_run.cpp)
+
+
+#Tests
+#enable_testing()
+#add_subdirectory(tests)
+#add_test(test_main test_main)

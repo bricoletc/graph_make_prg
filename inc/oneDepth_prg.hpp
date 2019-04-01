@@ -1,4 +1,6 @@
 #include "FA.hpp"
+#include <string>
+#include <vector>
 
 class oneDepth_prg {
 public:
