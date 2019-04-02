@@ -9,6 +9,7 @@ add_executable(prg_msa
         src/MSA.cpp
         src/FA.cpp
         src/oneDepth_prg.cpp
+        src/nested_prg.cpp
     src/test_run.cpp)
 
 

@@ -58,6 +58,7 @@ FA::FA(MSA &msa) {
             // If there is no edge between these two nodes, make one
             if (preceding_node->next.find(retrieved_node) == preceding_node->next.end()){
                 preceding_node->next.insert(retrieved_node);
+                retrieved_node->prev.insert(preceding_node);
             };
 
 

@@ -18,11 +18,13 @@ public:
 
     friend class FA;
     friend class oneDepth_prg;
+    friend class nested_prg;
 
 
 private:
     char letter;
-    std::set<auto_Node*> next;
+    std::set<auto_Node*> next; // Outgoing edges
+    std::set<auto_Node*> prev; // Incoming edges
     bool fixed_Point;
     int pos; // Alignment column number.
 
