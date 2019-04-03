@@ -1,6 +1,7 @@
 #include "MSA.hpp"
 #include "FA.hpp"
 #include "oneDepth_prg.hpp"
+#include "nested_prg.hpp"
 #include <iostream>
 
 
@@ -8,17 +9,19 @@ int main(){
 
     //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/AMA_Plasmodium.fasta");
     //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/AMA_Plasmodium_2recs.fasta");
-    //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/GC00001222_na_aln.fa");
-     MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/nested.fasta");
+    //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/nested.fasta");
 
+    MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/bifurc.fasta");
 
     FA fa = FA(msa);
 
-    auto prg = oneDepth_prg(fa.root);
-    std::cout << prg.prg << std::endl;
+    //auto prg = oneDepth_prg(fa.root);
+    //std::cout << prg.prg << std::endl;
 
-    void deletion_above_snpAndIndel();
-    deletion_above_snpAndIndel();
+    auto prg2 = nested_prg(fa.root);
+    std::cout << prg2.prg << std::endl;
+    //void deletion_above_snpAndIndel();
+    //deletion_above_snpAndIndel();
 
 }
 

@@ -81,7 +81,10 @@ FA::FA(MSA &msa) {
     for (int i = 0; i < N; i++) {
         auto_Node* cn = cur_Nodes[i];
 
-        if (cn->next.find(sink_node) == cn->next.end()) cn->next.insert(sink_node);
+        if (cn->next.find(sink_node) == cn->next.end()){
+          cn->next.insert(sink_node);
+          sink_node->prev.insert(cn);
+        }
 
     }
     sink_node->mark_as_fixed_point();

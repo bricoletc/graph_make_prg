@@ -12,6 +12,7 @@ public:
 private:
     std::string sequence;
     prg_Node* branch_point;
+    bool multifurc;
 };
 
 class nested_prg{
