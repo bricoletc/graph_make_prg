@@ -99,8 +99,10 @@ nested_prg::nested_prg(auto_Node *root) {
                 join += ancestor_p_Node->sequence + ",";
 
                 // Free the 'parental' prg_Node
-                delete ancestor_p_Node;
-                m.erase(node);
+                if (! ancestor_p_Node->multifurc){
+                    delete ancestor_p_Node;
+                    m.erase(node);
+                }
 
                 std::cout << join << std::endl;
             }
@@ -149,6 +151,8 @@ nested_prg::nested_prg(auto_Node *root) {
         else if (num_descendants > 1) {
             // Do we bifurcate into a multiparent, which has already been discovered? (due to another, prior bifurcation)
             bool bifurcate_into_cognate_multiparent = false;
+            bool added_bifurcator_seq = false;
+            std::string seed;
             prg_Node *branch_point = p_Node;
 
             for (auto nn : cur_Node->next) {
@@ -156,6 +160,11 @@ nested_prg::nested_prg(auto_Node *root) {
                     std::cout << "BIFURC_MULTIPAR" << std::endl;
                     bifurcate_into_cognate_multiparent = true; // Oh-oh...
                     p_Node->multifurc = true;
+                    if (!added_bifurcator_seq){
+                        auto bifurcator = m.at(nn);
+                        seed = bifurcator->branch_point->sequence;
+                        added_bifurcator_seq = true;
+                    }
                 }
             }
 
@@ -167,7 +176,7 @@ nested_prg::nested_prg(auto_Node *root) {
 
                 // If at least one bifurcation into a multiparent has been found, only create a prg_Node for clean nodes.
                 if (bifurcate_into_cognate_multiparent) {
-                    new_Node = new prg_Node(p_Node->sequence, branch_point);
+                    new_Node = new prg_Node(seed + p_Node->sequence, branch_point);
                 }
 
                 else {

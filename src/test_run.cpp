@@ -11,7 +11,8 @@ int main(){
     //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/AMA_Plasmodium_2recs.fasta");
     //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/nested.fasta");
 
-    MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/bifurc.fasta");
+    //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/bifurc.fasta");
+    MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/all_ends.fasta");
 
     FA fa = FA(msa);
 
