@@ -1,196 +1,173 @@
 #include "nested_prg.hpp"
-#include <queue>
 #include <unordered_map>
 #include <set>
+#include <deque>
+#include <queue>
+#include <string>
 
-
-// TODO: after joining, delete branchpoint? And how to delete its entry in map m?
-
-// TODO: multifurcations.
 
 prg_Node::prg_Node()
         :
         sequence(""),
-        branch_point(NULL),
-        multifurc(false) {
+        next(NULL) {
 }
 
-prg_Node::prg_Node(std::string sequence, prg_Node *branch_point)
+prg_Node::prg_Node(std::string sequence, auto_Node *next)
         :
         sequence(sequence),
-        branch_point(branch_point),
-        multifurc(false) {
+        next(next) {
 }
 
 nested_prg::nested_prg(auto_Node *root) {
-    // Set up data structures
-    std::queue<auto_Node *> q;
+    map_all_bubbles(root);
+
+    // Parse the bubbles, in dependency order
+    while(!topological_order.empty()){
+        auto start_point = topological_order.top();
+        topological_order.pop();
+        auto end_point = bubble_map.at(start_point);
+
+        parse_bubbles(start_point,end_point);
+    }
+
+    // Linear advance to build final prg sequence
+
+    auto_Node* cur_Node = root;
+    while (cur_Node->letter != SINK_CHAR){
+       if (prg_map.find(cur_Node) != prg_map.end()){
+           auto p_Node = prg_map.at(cur_Node);
+           prg += p_Node->sequence;
+           cur_Node = p_Node->next;
+       }
+
+       else{
+           if (cur_Node->letter != SOURCE_CHAR && fixed_point_map.find(cur_Node) == fixed_point_map.end()){
+             prg += cur_Node->letter;
+           }
+           cur_Node = *(cur_Node->next.begin());
+       }
+    }
+}
+
+
+void nested_prg::map_all_bubbles(auto_Node* root){
+    auto_Node *cur_Node = root;
+    while (cur_Node->letter != SINK_CHAR){
+        while (cur_Node->next.size() == 1) cur_Node = *(cur_Node->next.begin());
+
+        if (cur_Node->letter == SINK_CHAR) break;
+        cur_Node = map_bubbles(cur_Node);
+    }
+}
+
+
+auto_Node *nested_prg::map_bubbles(auto_Node *start_point) {
+    // Commit this start point to the topological order stack.
+    topological_order.push(start_point);
+
+    //std::deque<auto_Node*> q;
+    auto cmp = [](auto_Node *p1, auto_Node *p2) { return p1->pos > p2->pos; };
+    std::priority_queue<auto_Node *, std::vector<auto_Node *>, decltype(cmp)> q(cmp);
     std::set<auto_Node *> to_visit;
-    std::set<auto_Node *> visited;
-    std::unordered_map<auto_Node *, prg_Node *> m;
+
+
+    for (auto nn : start_point->next) {
+        q.push(nn);
+        to_visit.insert(nn);
+    }
 
     auto_Node *cur_Node;
 
-    q.push(root);
-    to_visit.insert(root);
+    while (q.size() > 1) {
 
-    prg_Node *p_Node = new prg_Node();
-    m.insert(std::make_pair(root, p_Node));
-
-    std::string cur_Prg;
-
-    while (!q.empty()) {
-        cur_Node = q.front();
+        cur_Node = q.top();
         q.pop();
-
-        visited.insert(cur_Node);
         to_visit.erase(cur_Node);
 
-        // Add the character of the mapped NFA node to the prg_Node.
-        p_Node = m.at(cur_Node);
 
-        // Note, that if we are in a 'join' case, p_Node->sequence ought to be empty string before this line.
-        if (cur_Node -> letter != SOURCE_CHAR && cur_Node -> letter != SINK_CHAR) p_Node->sequence += cur_Node->letter;
+        auto num_descendents = cur_Node->next.size();
 
-        std::cout << "Cur_Node letter: " << cur_Node->letter << "\t at Pos: " << cur_Node->pos <<  "\t p_Node sequence: " << p_Node->sequence<<std::endl;
-
-        // Case: join operation
-        if (cur_Node->prev.size() > 1) {
-            bool repushed = false;
-
-            for (auto node : cur_Node->prev) {
-                if (visited.find(node) ==
-                    visited.end()) { // We need to have processed all immediate parents; if not, defer processing the node.
-                    p_Node->sequence.pop_back(); // Remove the character that we added to the sequence.
-                    visited.erase(cur_Node);
-                    to_visit.insert(cur_Node);
-                    q.push(cur_Node); // See you later
-                    repushed = true;
-                    break;
-                }
-            }
-
-            if (repushed) continue;
-
-            std::string join = "";
-            prg_Node *branch_point;
-            bool first = true; // Special treatment for first parent.
-            bool multifurc = false; // Special treatment for multifurcating cases.
-
-            prg_Node *ancestor_p_Node;
-
-            std::cout << "JOINING: \n";
-            for (auto node : cur_Node->prev) {
-                ancestor_p_Node = m.at(node);
-
-                if (p_Node->branch_point == ancestor_p_Node){
-                    // Empty record
-                    join += ",";
-                    continue;
-                }
-
-                if (first) {
-                    // Assumption: the branch_point of all the nodes we are joining, is the same- so take the first as representative.
-                    branch_point = ancestor_p_Node->branch_point;
-                    first = false;
-                    if (branch_point->multifurc) multifurc = true;
-                }
-
-                join += ancestor_p_Node->sequence + ",";
-
-                // Free the 'parental' prg_Node
-                if (! ancestor_p_Node->multifurc){
-                    delete ancestor_p_Node;
-                    m.erase(node);
-                }
-
-                std::cout << join << std::endl;
-            }
-            join.pop_back(); // Take out the last comma
-            join = "[" + join + "]";
-            if (branch_point != NULL && !multifurc)
-                join = branch_point->sequence + join; //Only add ancestral sequence if no multifurcation occurred.
-            p_Node->sequence = cur_Node->letter == SINK_CHAR ? join : join +
-                                                                      p_Node->sequence; //Only add p_Node sequence if we are not at final node.
-            if (branch_point != NULL) p_Node->branch_point = branch_point->branch_point; // Assign ancestor's ancestor, as new ancestor.
-
-            std::cout << "Join output: " << join << std::endl;
-            std::cout << "Prg_node seq: " << p_Node->sequence << std::endl;
-
+        // Recursive call here.
+        if (num_descendents > 1) {
+            auto nn = map_bubbles(cur_Node);
+            if (to_visit.find(nn) != to_visit.end()) continue;
+            q.push(nn);
+            to_visit.insert(nn);
+        } else {
+            auto nn = *(cur_Node->next.begin());
+            if (to_visit.find(nn) != to_visit.end()) continue;
+            q.push(nn);
+            to_visit.insert(nn);
         }
-
-        // No else: join operation (backwards operation) independent of linear advance/ bifurcate/ end operation (forwards operation)
-        int num_descendants = cur_Node->next.size();
-
-        // Case: linear advance
-        if (num_descendants == 1) {
-            auto next_Node = *(cur_Node->next.begin());
-            if (to_visit.find(next_Node) != to_visit.end())
-                continue; // This node points to a multi-parent node. Nothing to do.
-
-            // Register a future visit
-            q.push(next_Node);
-            to_visit.insert(next_Node);
-
-
-            // Update references
-            if (next_Node->prev.size() == 1) {
-                // Mono-parent node: update reference (= next_Node points to what cur_Node used to)
-                m.insert(std::make_pair(next_Node, p_Node));
-                m.erase(cur_Node);
-            } else {
-                // Multi-parent node: create a blank prg_Node for it.
-                // Also, no touching the reference to cur_Node in the map.
-                prg_Node *new_Node = new prg_Node();
-                m.insert(std::make_pair(next_Node, new_Node));
-            }
-        }
-
-
-        //Case: bifurcate
-        else if (num_descendants > 1) {
-            // Do we bifurcate into a multiparent, which has already been discovered? (due to another, prior bifurcation)
-            bool bifurcate_into_cognate_multiparent = false;
-            bool added_bifurcator_seq = false;
-            std::string seed;
-            prg_Node *branch_point = p_Node;
-
-            for (auto nn : cur_Node->next) {
-                if (to_visit.find(nn) != to_visit.end()) {
-                    std::cout << "BIFURC_MULTIPAR" << std::endl;
-                    bifurcate_into_cognate_multiparent = true; // Oh-oh...
-                    p_Node->multifurc = true;
-                    if (!added_bifurcator_seq){
-                        auto bifurcator = m.at(nn);
-                        seed = bifurcator->branch_point->sequence;
-                        added_bifurcator_seq = true;
-                    }
-                }
-            }
-
-
-            prg_Node *new_Node;
-            for (auto nn : cur_Node->next) {
-
-                if (to_visit.find(nn) != to_visit.end()) continue;
-
-                // If at least one bifurcation into a multiparent has been found, only create a prg_Node for clean nodes.
-                if (bifurcate_into_cognate_multiparent) {
-                    new_Node = new prg_Node(seed + p_Node->sequence, branch_point);
-                }
-
-                else {
-                    // TODO possible to avoid empty records?
-                    new_Node = new prg_Node("", branch_point);
-                }
-                m.insert(std::make_pair(nn, new_Node));
-                q.push(nn);
-                to_visit.insert(nn);
-            }
-
-        }
-
-       if (cur_Node->letter == SINK_CHAR) prg = p_Node->sequence;
     }
 
+    auto fixed_point = q.top();
+    // Mark the direct ancestors of the fixed point
+    if (fixed_point_map.find(fixed_point) == fixed_point_map.end()){
+        std::set<auto_Node*> prevs;
+        for (auto pn : fixed_point->prev){
+           prevs.insert(pn);
+        }
+        fixed_point_map.insert(std::make_pair(fixed_point, prevs));
+    }
+
+    std::cout << "Fixed point : " << fixed_point->letter << std::endl;
+    bubble_map.insert(std::make_pair(start_point, fixed_point));
+
+    return fixed_point;
+}
+
+
+void nested_prg::parse_bubbles(auto_Node *start_point, auto_Node *end_point) {
+    std::vector<std::string> alts;
+    auto ancestors = fixed_point_map.at(end_point);
+
+
+    for (auto nn : start_point->next) {
+        // Deal with the case where start_point has straight connection to end_point
+        if (nn == end_point && ancestors.find(start_point) != ancestors.end()) ancestors.erase(start_point);
+
+        std::string alt = "";
+
+        while (nn != end_point) {
+            if (prg_map.find(nn) != prg_map.end()) {
+                auto p_Node = prg_map.at(nn);
+                alt += (p_Node->sequence);
+                nn = p_Node->next;
+            } else {
+                alt += (nn->letter);
+                // Important: peel off fixed point ancestor if first time seen
+                auto next = *(nn->next.begin());
+                if (next == end_point && ancestors.find(nn) != ancestors.end()) ancestors.erase(nn);
+
+                nn = next;
+            }
+        }
+
+        alts.push_back(alt);
+    }
+
+    // Update ancestors
+    fixed_point_map.erase(end_point);
+    fixed_point_map.insert(make_pair(end_point,ancestors));
+
+    // Make a prg sequence.
+    std::string prg_Seq;
+    for (auto s : alts){
+       prg_Seq+= s + ",";
+    }
+    prg_Seq.pop_back();
+    prg_Seq = "[" + prg_Seq + "]";
+
+    // Prepend the common string pre bifurcation.
+    prg_Seq = start_point->letter + prg_Seq;
+
+    // Postpend the common letter post joining
+    if (ancestors.size() == 0 && bubble_map.find(end_point) == bubble_map.end()) prg_Seq += end_point->letter;
+
+    std::cout << prg_Seq << std::endl;;
+
+    // Make a prg node, and make it available.
+    prg_Node* new_Node = new prg_Node(prg_Seq, end_point);
+    prg_map.insert(std::make_pair(start_point,new_Node));
 }

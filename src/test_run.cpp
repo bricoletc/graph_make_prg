@@ -7,20 +7,22 @@
 
 int main(){
 
-    //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/AMA_Plasmodium.fasta");
-    //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/AMA_Plasmodium_2recs.fasta");
-    //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/nested.fasta");
+    //MSA msa("/home/brice/Desktop/phD_Work/git_repos/prg_msa/test_data/AMA_Plasmodium.fasta");
+    //MSA msa("/home/brice/Desktop/phD_Work/git_repos/prg_msa/test_data/AMA_Plasmodium_2recs.fasta");
+    //MSA msa("/home/brice/Desktop/phD_Work/git_repos/prg_msa/test_data/nested.fasta");
 
     //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/bifurc.fasta");
-    MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/all_ends.fasta");
+    //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/all_ends.fasta");
+    //MSA msa("/home/brice/Desktop/phD_Work/git_repos/prg_msa/test_data/bifurc2.fasta");
+    MSA msa("/home/brice/Desktop/phD_Work/git_repos/prg_msa/test_data/bifurc3.fasta");
 
     FA fa = FA(msa);
 
+    nested_prg p = nested_prg(fa.root);
     //auto prg = oneDepth_prg(fa.root);
     //std::cout << prg.prg << std::endl;
 
-    auto prg2 = nested_prg(fa.root);
-    std::cout << prg2.prg << std::endl;
+    std::cout << "Final prg: " << p.prg << std::endl;
     //void deletion_above_snpAndIndel();
     //deletion_above_snpAndIndel();
 
