@@ -1,4 +1,5 @@
 #include "FA.hpp"
+#include <limits>
 
 auto_Node::auto_Node()
         :
@@ -77,7 +78,8 @@ FA::FA(MSA &msa) {
     }
 
     // Final link to a fixed_point auto_Node
-    auto_Node* sink_node = new auto_Node(SINK_CHAR, -1);
+    int sink_pos = std::numeric_limits<int>::max(); // We need sink_pos to be processed latest in the priority queue in nested prg construction.
+    auto_Node* sink_node = new auto_Node(SINK_CHAR, sink_pos);
 
     for (int i = 0; i < N; i++) {
         auto_Node* cn = cur_Nodes[i];

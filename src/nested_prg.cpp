@@ -160,10 +160,12 @@ void nested_prg::parse_bubbles(auto_Node *start_point, auto_Node *end_point) {
     prg_Seq = "[" + prg_Seq + "]";
 
     // Prepend the common string pre bifurcation.
-    prg_Seq = start_point->letter + prg_Seq;
+    if (start_point->letter != SOURCE_CHAR) prg_Seq = start_point->letter + prg_Seq;
 
     // Postpend the common letter post joining
-    if (ancestors.size() == 0 && bubble_map.find(end_point) == bubble_map.end()) prg_Seq += end_point->letter;
+    if (ancestors.size() == 0 && bubble_map.find(end_point) == bubble_map.end() && end_point->letter != SINK_CHAR){
+      prg_Seq += end_point->letter;
+    }
 
     std::cout << prg_Seq << std::endl;;
 
