@@ -48,5 +48,5 @@ private:
      */
     void parse_bubbles(auto_Node* start_point, auto_Node* end_point);
 
-
+    void serialise_prg();
 };

@@ -47,6 +47,8 @@ nested_prg::nested_prg(auto_Node *root) {
            cur_Node = *(cur_Node->next.begin());
        }
     }
+
+    serialise_prg();
 }
 
 
@@ -172,4 +174,35 @@ void nested_prg::parse_bubbles(auto_Node *start_point, auto_Node *end_point) {
     // Make a prg node, and make it available.
     prg_Node* new_Node = new prg_Node(prg_Seq, end_point);
     prg_map.insert(std::make_pair(start_point,new_Node));
+}
+
+void nested_prg::serialise_prg() {
+   int cur_var_marker = 3; // Will start writing out at 5.
+   std::string serialised_prg = "";
+   std::cout << "Prg pre serialisation: " << prg << std::endl;
+   for (int i = 0; i<prg.size(); ++i){
+       const auto &c = prg[i];
+
+      switch(c) {
+          case '[' : {
+              cur_var_marker += 2;
+              serialised_prg += std::to_string(cur_var_marker);
+              break;
+          }
+
+          case ']' : {
+              serialised_prg += std::to_string(cur_var_marker);
+              cur_var_marker -= 2;
+              break;
+          }
+
+          case ',' : serialised_prg += std::to_string(cur_var_marker + 1);
+                    break;
+
+          default : serialised_prg += c;
+                    break;
+      }
+   }
+
+   prg = serialised_prg;
 }
