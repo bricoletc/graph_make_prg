@@ -48,7 +48,7 @@ nested_prg::nested_prg(auto_Node *root) {
        }
     }
 
-    serialise_prg();
+    //serialise_prg();
 }
 
 
@@ -126,25 +126,26 @@ void nested_prg::parse_bubbles(auto_Node *start_point, auto_Node *end_point) {
 
 
     for (auto nn : start_point->next) {
-        // Deal with the case where start_point has straight connection to end_point
-        if (nn == end_point && ancestors.find(start_point) != ancestors.end()) ancestors.erase(start_point);
-
         std::string alt = "";
+        // Record the previous node, to wipe it out as an ancestor at the end of the loop.
+        auto previous = start_point;
 
         while (nn != end_point) {
+            previous = nn;
             if (prg_map.find(nn) != prg_map.end()) {
                 auto p_Node = prg_map.at(nn);
                 alt += (p_Node->sequence);
                 nn = p_Node->next;
             } else {
-                alt += (nn->letter);
-                // Important: peel off fixed point ancestor if first time seen
-                auto next = *(nn->next.begin());
-                if (next == end_point && ancestors.find(nn) != ancestors.end()) ancestors.erase(nn);
-
-                nn = next;
+                try{ // Has this char been committed to PRG string already?
+                    if (fixed_point_map.at(nn).size() == 0 ) {;} // Yes: Do nothing
+                }
+                catch(const std::out_of_range &e) {alt += (nn->letter);} //No: commit the char
+                nn = *(nn->next.begin());
             }
         }
+        // Important!!: peel off fixed point direct ancestor first time seen.
+        if (ancestors.find(previous) != ancestors.end()) ancestors.erase(previous);
 
         alts.push_back(alt);
     }
