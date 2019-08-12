@@ -15,7 +15,7 @@ int main(){
     //MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/all_ends.fasta");
     //MSA msa("/home/brice/Desktop/phD_Work/git_repos/prg_msa/test_data/bifurc2.fasta");
     //MSA msa("/home/brice/Desktop/phD_Work/git_repos/prg_msa/test_data/bifurc3.fasta");
-    MSA msa("/home/brice/Desktop/git_repos/prg_msa/test_data/longer.fasta");
+    MSA msa("/home/brice/Desktop/git_repos/prg_string_construction/prg_msa/test_data/longer.fasta");
 
     FA fa = FA(msa);
 

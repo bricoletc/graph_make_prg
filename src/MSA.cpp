@@ -1,29 +1,41 @@
 #include <iostream>
+#include <sstream>
 #include "MSA.hpp"
 
-
-MSA::MSA(std::string MSA_fname) {
+MSA::MSA(std::string MSA, bool is_file) {
     num_records = 0;
     offset = 0;
+    is_a_file = is_file;
 
-    handle = std::ifstream(MSA_fname, std::ifstream::binary);
-    if (handle.fail()) {
-        std::cout << "Error: cannot open file " << MSA_fname << ".\n Exiting.";
-        exit(1);
+    if (is_file){
+        if_handle = std::ifstream(MSA, std::ifstream::binary);
+        if (if_handle.fail()){
+            std::cout << "Error: cannot open file " << MSA << ".\n Exiting.";
+            exit(1);
+        };
+        find_starts(if_handle);
     }
-    find_starts();
+    else {
+        ss_handle = std::stringstream(MSA);
+        if (ss_handle.fail()){
+            std::cout << "Error: cannot open provided string as stream .\n Exiting.";
+            exit(1);
+        }
+        find_starts(ss_handle);
+    }
+
 
     more_columns = true;
 }
 
 
 MSA::~MSA() {
-    handle.close();
+    if (is_a_file) if_handle.close();
 }
 
 
 // TODO: add check that each record has same number of chars
-void MSA::find_starts() {
+void MSA::find_starts(std::istream& handle) {
 
     char c = '\0';
 
@@ -67,8 +79,13 @@ void MSA::find_starts() {
     }
 }
 
+std::istream& MSA::get_handle(){
+   if (is_a_file) return if_handle;
+   else return ss_handle;
+};
 
 std::vector<char> MSA::next_column() {
+    std::istream& handle = get_handle();
     std::vector<char> column;
 
     char c;

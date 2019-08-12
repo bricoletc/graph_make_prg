@@ -1,8 +1,8 @@
+#include <nested_prg.hpp>
 #include "oneDepth_prg.hpp"
 
-#include <sstream>
-
 void deletion_above_snpAndIndel(){
+    bool is_file = false;
     std::string MSA_string = ">Rec1\n"
                       "ACGTTA\n"
                       ">Rec2\n"
@@ -11,5 +11,11 @@ void deletion_above_snpAndIndel(){
                       "A----A\n"
                       ;
 
-    std::stringstream msa_file = std::stringstream(MSA_string);
+    MSA msa(MSA_string, is_file);
+    FA fa(msa);
+    nested_prg p = nested_prg(fa.root);
+}
+
+int main(){
+    deletion_above_snpAndIndel();
 }

@@ -30,12 +30,10 @@ private:
 
 };
 
-
 class FA{
 public:
     FA(MSA &msa);
     auto_Node* root;
-
 };
 
 #endif

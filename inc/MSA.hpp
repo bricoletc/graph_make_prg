@@ -2,13 +2,14 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #ifndef HPP_MSA
 #define HPP_MSA
 
 class MSA {
 public:
-    MSA(std::string MSA_fname);
+    MSA(std::string MSA, bool is_file = true);
     ~MSA();
     std::vector<char> next_column();
     int num_records;
@@ -16,10 +17,13 @@ public:
 
 
 private:
-    std::ifstream handle;
+    bool is_a_file;
+    std::stringstream ss_handle;
+    std::ifstream if_handle;
+    std::istream& get_handle();
     std::vector<int> seekg_starts;
     int offset;
-    void find_starts();
+    void find_starts(std::istream& handle);
 };
 
 #endif
