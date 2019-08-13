@@ -1,4 +1,5 @@
 #include "MSA.hpp"
+#include "log.hpp"
 #include <set>
 #include <unordered_map>
 

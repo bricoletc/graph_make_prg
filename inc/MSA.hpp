@@ -20,6 +20,10 @@ private:
     bool is_a_file;
     std::stringstream ss_handle;
     std::ifstream if_handle;
+    /**
+     * stringstream and ifstream are both derived classes from istream
+     * This function takes either and returns a uniform object on which to operate regardless of MSA data input
+     */
     std::istream& get_handle();
     std::vector<int> seekg_starts;
     int offset;

@@ -113,7 +113,7 @@ auto_Node *nested_prg::map_bubbles(auto_Node *start_point) {
         fixed_point_map.insert(std::make_pair(fixed_point, prevs));
     }
 
-    std::cout << "Fixed point : " << fixed_point->letter << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "Fixed point : " << fixed_point->letter;
     bubble_map.insert(std::make_pair(start_point, fixed_point));
 
     return fixed_point;
@@ -170,7 +170,7 @@ void nested_prg::parse_bubbles(auto_Node *start_point, auto_Node *end_point) {
       prg_Seq += end_point->letter;
     }
 
-    std::cout << prg_Seq << std::endl;;
+    BOOST_LOG_TRIVIAL(debug) << prg_Seq ;
 
     // Make a prg node, and make it available.
     prg_Node* new_Node = new prg_Node(prg_Seq, end_point);

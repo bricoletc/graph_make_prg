@@ -1,4 +1,5 @@
 #include "FA.hpp"
+#include "log.hpp"
 #include <unordered_map>
 #include <stack>
 

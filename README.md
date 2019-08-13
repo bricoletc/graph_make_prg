@@ -13,6 +13,7 @@ A choice needs to be made between adjacent variant site markers vs adjacent site
 
 ## TODOs
 
-* Google tests
-* Debugging mode with writing out useful information
-* Control nesting level
+[] Google test framework
+[x] Debugging mode for writing out useful information using boost
+[] Control nesting level
+[] Fasta parsing for MSA using htslib?
