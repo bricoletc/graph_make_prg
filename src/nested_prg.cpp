@@ -113,7 +113,7 @@ auto_Node *nested_prg::map_bubbles(auto_Node *start_point) {
         fixed_point_map.insert(std::make_pair(fixed_point, prevs));
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Fixed point : " << fixed_point->letter;
+    BOOST_LOG_TRIVIAL(debug) << "Fixed point : " << fixed_point->letter << " at pos: " << fixed_point->pos;
     bubble_map.insert(std::make_pair(start_point, fixed_point));
 
     return fixed_point;

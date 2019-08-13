@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
+#include "assert.h"
 #include "MSA.hpp"
+#include "utils.hpp"
 
 MSA::MSA(std::string MSA, bool is_file) {
     num_records = 0;
@@ -34,15 +36,23 @@ MSA::~MSA() {
 }
 
 
-// TODO: add check that each record has same number of chars
 void MSA::find_starts(std::istream& handle) {
+
+    // We will tally fasta record sizes and abort if they are not all the same.
+    bool master_record = true;
+    bool in_record = false;
+    int master_record_size{0};
+    int cur_record_size;
 
     char c = '\0';
 
     while (!handle.eof()) {
 
         handle.get(c);
-        if (c != '>') continue;
+        if (c != '>'){
+            if (in_record && c != '\n') ++cur_record_size;
+            continue;
+        }
 
         // Go to end of header line
         while (c != '\n' && !handle.eof()) handle.get(c);
@@ -63,8 +73,26 @@ void MSA::find_starts(std::istream& handle) {
 
         // Seekg needs to give position before a .get() for the first column element.
         seekg_starts.push_back(handle.tellg());
-
         num_records++;
+
+        if (!in_record)
+            in_record = true;
+        else if (master_record){
+            master_record_size = cur_record_size;
+            master_record = false;
+        }
+        else {
+            if (cur_record_size != master_record_size){
+                BOOST_LOG_TRIVIAL(error) << "Found two records with different "
+                                            "lengths in input file: \n"
+                                            "record 1 " << master_record_size <<
+                                            " vs record " << num_records - 1 <<
+                                            " " << cur_record_size << std::endl <<
+                                            "Please reformat.";
+                exit(1);
+            }
+        }
+        cur_record_size = 0;
     }
 
 

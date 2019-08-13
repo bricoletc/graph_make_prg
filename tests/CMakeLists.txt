@@ -2,7 +2,7 @@ include(${PROJECT_SOURCE_DIR}/ext/gtest.cmake)
 
 set(INCLUDE
         ${PROJECT_SOURCE_DIR}/inc
-        common.hpp
+        ./*.hpp
         ${source_dir}/googletest/include
         ${source_dir}/googlemock/include)
 
