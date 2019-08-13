@@ -17,6 +17,8 @@ public:
 
     void mark_as_fixed_point() { this->fixed_Point = true; }
 
+    friend bool operator < (const auto_Node& lhs, const auto_Node& rhs);
+
     friend class FA;
     friend class oneDepth_prg;
     friend class nested_prg;

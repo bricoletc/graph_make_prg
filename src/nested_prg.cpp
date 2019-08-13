@@ -1,9 +1,8 @@
 #include "nested_prg.hpp"
 #include <unordered_map>
 #include <set>
-#include <deque>
-#include <queue>
 #include <string>
+#include <stack>
 
 
 prg_Node::prg_Node()
@@ -48,7 +47,7 @@ nested_prg::nested_prg(auto_Node *root) {
        }
     }
 
-    //serialise_prg();
+    serialise_prg();
 }
 
 
@@ -64,6 +63,9 @@ void nested_prg::map_all_bubbles(auto_Node* root){
 
 
 auto_Node *nested_prg::map_bubbles(auto_Node *start_point) {
+    // Return directly if we have already done this work.
+    if (bubble_map.find(start_point) != bubble_map.end()) return bubble_map.at(start_point);
+
     // Commit this start point to the topological order stack.
     topological_order.push(start_point);
 
@@ -181,32 +183,40 @@ void nested_prg::parse_bubbles(auto_Node *start_point, auto_Node *end_point) {
 }
 
 void nested_prg::serialise_prg() {
-   int cur_var_marker = 3; // Will start writing out at 5.
+   std::stack<int> marker_stack;
+   int max_var_marker{3};
+
    std::string serialised_prg = "";
-   std::cout << "Prg pre serialisation: " << prg << std::endl;
+   BOOST_LOG_TRIVIAL(debug) << "Prg pre serialisation: " << prg;
    for (int i = 0; i<prg.size(); ++i){
        const auto &c = prg[i];
 
       switch(c) {
           case '[' : {
-              cur_var_marker += 2;
-              serialised_prg += std::to_string(cur_var_marker);
+              max_var_marker += 2;
+              marker_stack.push(max_var_marker);
+              serialised_prg += " " + std::to_string(max_var_marker) + " ";
               break;
           }
 
           case ']' : {
-              serialised_prg += std::to_string(cur_var_marker);
-              cur_var_marker -= 2;
+              assert(!marker_stack.empty());
+              serialised_prg += std::to_string(marker_stack.top() + 1) + "$ ";
+              marker_stack.pop();
               break;
           }
 
-          case ',' : serialised_prg += std::to_string(cur_var_marker + 1);
-                    break;
+          case ',' : {
+              assert(!marker_stack.empty());
+              serialised_prg += std::to_string(marker_stack.top() + 1);
+              break;
+          }
 
           default : serialised_prg += c;
                     break;
       }
    }
 
-   prg = serialised_prg;
+   this->serialised_prg = serialised_prg;
+   BOOST_LOG_TRIVIAL(info) << "Number of sites produced: " << (max_var_marker -3 ) / 2;
 }

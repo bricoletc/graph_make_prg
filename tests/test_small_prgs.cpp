@@ -6,7 +6,7 @@
 /*
  * Testing a series here, of related but slightly different NFAs
  */
-void deletion_spanning_snpAndIndel() {
+TEST(MSA, deletion_spanning_snpAndIndel) {
     std::string MSA_string = ">Rec1\n"
                              "ACGTTA\n"
                              ">Rec2\n"
@@ -42,7 +42,7 @@ void deletion_spanning_snpAndIndel() {
 
 }
 
-void adjacent_snp_and_del() {
+TEST(MSA, adjacent_snp_and_del) {
     std::string MSA_string = ">Rec1\n"
                              "ACGT\n"
                              ">Rec2\n"
@@ -53,7 +53,7 @@ void adjacent_snp_and_del() {
     auto p3 = make_and_print_prg_string(MSA_string, false);
 }
 
-void level3Nesting_allEndAtFinalNode() {
+TEST(MSA, level3Nesting_allEndAtFinalNode) {
 
     std::string MSA_string = ">R1\n"
                              "ACCAT\n"

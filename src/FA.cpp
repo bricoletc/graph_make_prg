@@ -15,6 +15,9 @@ auto_Node::auto_Node(char l, int pos)
         pos(pos){
 }
 
+bool operator < (const auto_Node& lhs, const auto_Node& rhs){
+    return lhs.pos > rhs.pos;
+}
 
 FA::FA(MSA &msa) {
     static std::set<char> gapping_chars = {'-', '.'};
