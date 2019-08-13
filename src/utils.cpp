@@ -1,4 +1,4 @@
-#include "log.hpp"
+#include "utils.hpp"
 
 void init_logging(const std::string& log_level){
     auto g_log_level{logging::trivial::info};

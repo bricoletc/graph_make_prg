@@ -7,7 +7,7 @@ project(prg_msa)
 
 find_package(Threads REQUIRED)
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.62.0 COMPONENTS log thread system REQUIRED)
+find_package(Boost 1.62.0 COMPONENTS filesystem log thread system REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES
         src/*.cpp)
@@ -20,6 +20,7 @@ add_executable(prg_msa
     ${SOURCE_FILES})
 target_link_libraries(prg_msa
         ${CMAKE_THREAD_LIBS_INIT}
+        ${Boost_FILESYSTEM_LIBRARY}
         ${Boost_LOG_LIBRARY}
         ${Boost_THREAD_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
@@ -32,6 +33,7 @@ add_library(libprg_msa STATIC ${SOURCE_FILES})
 target_include_directories(libprg_msa PUBLIC ${INCLUDE})
 target_link_libraries(libprg_msa
         ${CMAKE_THREAD_LIBS_INIT}
+        ${Boost_FILESYSTEM_LIBRARY}
         ${Boost_LOG_LIBRARY}
         ${Boost_THREAD_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}

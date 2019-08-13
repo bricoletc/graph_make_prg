@@ -1,7 +1,10 @@
 #include "FA.hpp"
-#include "log.hpp"
+#include "utils.hpp"
 #include <unordered_map>
 #include <stack>
+
+#ifndef HPP_NESTED_PRG
+#define HPP_NESTED_PRG
 
 class prg_Node{
 
@@ -51,3 +54,5 @@ private:
 
     void serialise_prg();
 };
+
+#endif

@@ -1,10 +1,12 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
+#include <boost/filesystem.hpp>
 
-#ifndef HPP_LOG
-#define HPP_LOG
+#ifndef HPP_UTILS
+#define HPP_UTILS
 namespace logging = boost::log;
+namespace filesystem = boost::filesystem;
 
 /**
  * Sets up default logging at info and above

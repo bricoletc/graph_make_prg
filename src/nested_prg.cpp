@@ -156,6 +156,9 @@ void nested_prg::parse_bubbles(auto_Node *start_point, auto_Node *end_point) {
 
     // Make a prg sequence.
     std::string prg_Seq;
+
+    // Make sure we sort the alleles, so that unit testing is simplified.
+    std::sort(alts.begin(), alts.end());
     for (auto s : alts){
        prg_Seq+= s + ",";
     }
