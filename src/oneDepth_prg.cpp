@@ -1,21 +1,21 @@
 #include "oneDepth_prg.hpp"
 #include <unordered_map>
 
-oneDepth_prg::oneDepth_prg(auto_Node* root) {
-    auto_Node* cur_Node = root;
+oneDepth_prg::oneDepth_prg(std::shared_ptr<auto_Node> root) {
+    std::shared_ptr<auto_Node> cur_Node = root;
     prg = "";
     num_var_sites = 0;
 
 
     while (cur_Node->letter != SINK_CHAR) {
         if (cur_Node->next.size() == 1) {
-            auto_Node *nn = *(cur_Node->next.begin());
+            std::shared_ptr<auto_Node> nn = *(cur_Node->next.begin());
 
             if (nn->letter != SINK_CHAR) prg += nn->letter;
 
             cur_Node = nn;
         } else {
-            auto_Node *fixed_point = NULL;
+            std::shared_ptr<auto_Node> fixed_point = NULL;
             std::string alt = "";
 
             // Look for direct link to a fixed point
@@ -47,7 +47,7 @@ oneDepth_prg::oneDepth_prg(auto_Node* root) {
 /**
  * DFS traversal from the given node until we find a fixed point.
  */
-auto_Node *oneDepth_prg::find_fixed_point(auto_Node *cur_Node) {
+std::shared_ptr<auto_Node> oneDepth_prg::find_fixed_point(std::shared_ptr<auto_Node> cur_Node) {
     //If the current node is already a fixed point, avoid returning it.
     if (cur_Node->fixed_Point) cur_Node = *(cur_Node->next.begin());
 
@@ -63,7 +63,7 @@ auto_Node *oneDepth_prg::find_fixed_point(auto_Node *cur_Node) {
 /**
  * Depth-First Fixed-point bounded Search.
  */
-void oneDepth_prg::DFFS(auto_Node *cur_Node, std::string alt, auto_Node *fixed_point) {
+void oneDepth_prg::DFFS(std::shared_ptr<auto_Node> cur_Node, std::string alt, std::shared_ptr<auto_Node> fixed_point) {
     for (auto node : cur_Node->next) {
         if (node == fixed_point){
             var_region.push_back(alt);

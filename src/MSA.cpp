@@ -26,7 +26,6 @@ MSA::MSA(std::string MSA, bool is_file) {
         find_starts(ss_handle);
     }
 
-
     more_columns = true;
 }
 
@@ -149,4 +148,8 @@ std::vector<char> MSA::next_column() {
     offset++;
 
     return column;
+}
+
+void MSA::reposition(int new_offset){
+    offset = new_offset;
 }
