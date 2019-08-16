@@ -19,6 +19,15 @@ prg_Node::prg_Node(std::string sequence, auto_Node *next)
 
 nested_prg::nested_prg(auto_Node *root) {
     map_all_bubbles(root);
+    std::cout << "Success!";
+    for (auto f: fixed_point_numbers){
+        if (f.second.second <= 3 or f.first->pos > 290) continue;
+        std::cout << std::endl;
+        std::cout << "Pos: " << f.first->pos << std::endl;
+        std::cout << "Earliest start bubble: " << f.second.first->pos << std::endl;
+        std::cout << "Num incidents: " << f.second.second << std::endl;
+    }
+    exit(0);
 
     // Parse the bubbles, in dependency order
     while(!topological_order.empty()){
@@ -117,6 +126,19 @@ auto_Node *nested_prg::map_bubbles(auto_Node *start_point) {
 
     BOOST_LOG_TRIVIAL(debug) << "Fixed point : " << fixed_point->letter << " at pos: " << fixed_point->pos;
     bubble_map.insert(std::make_pair(start_point, fixed_point));
+
+    // Update the incident bubbles
+    if (fixed_point_numbers.find(fixed_point) == fixed_point_numbers.end()){
+       fixed_point_numbers.insert(std::make_pair(fixed_point, std::make_pair(start_point, 1)));
+    }
+    else{
+        auto& entry = fixed_point_numbers.at(fixed_point);
+        auto& earliest_incident_bubble = entry.first;
+        // Update the bubble entry pointed to, if its position is before.
+        if (start_point->pos < earliest_incident_bubble->pos) earliest_incident_bubble = start_point;
+        // Increment the number of incident bubbles.
+        entry.second++;
+    }
 
     return fixed_point;
 }

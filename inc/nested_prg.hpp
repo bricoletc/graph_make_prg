@@ -41,6 +41,13 @@ private:
     std::unordered_map<auto_Node*,std::set<auto_Node*>> fixed_point_map;
 
     /**
+     * Maps the end of a local bubble to a pair of:
+     *  - The earliest (positionally) bubble that end into it.
+     *  - The number of bubbles that end into it.
+     */
+    std::unordered_map<auto_Node*,std::pair<auto_Node*,int>> fixed_point_numbers;
+
+    /**
      * Traverses full NFA graph and maps all bubbles.
      * @see map_bubbles()
      */

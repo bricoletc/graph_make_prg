@@ -5,15 +5,17 @@
 ### Nested form
 
 ## Test data
+Can use strings directly, or files.
 
-### Adjacent_markers.fasta
+### adjacent_markers.fasta
 
 Is here to illustrate a case where adjacent markers cannot be avoided. 
 A choice needs to be made between adjacent variant site markers vs adjacent site and allele markers (ie an empty allele record).
 
 ## TODOs
 
-[] Google test framework
 [x] Debugging mode for writing out useful information using boost
+[x] Google test framework
 [] Control nesting level
-[] Fasta parsing for MSA using htslib?
+[] Fasta & vcf parsing using ~~htslib~~ [SeqAn](https://seqan.readthedocs.io/en/master/index.html)
+[] Dot graph production possibility- see vg.
