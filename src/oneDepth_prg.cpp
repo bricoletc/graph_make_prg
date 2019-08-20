@@ -7,11 +7,11 @@ oneDepth_prg::oneDepth_prg(std::shared_ptr<auto_Node> root) {
     num_var_sites = 0;
 
 
-    while (cur_Node->letter != SINK_CHAR) {
+    while (cur_Node->characters != SINK_CHAR) {
         if (cur_Node->next.size() == 1) {
             std::shared_ptr<auto_Node> nn = *(cur_Node->next.begin());
 
-            if (nn->letter != SINK_CHAR) prg += nn->letter;
+            if (nn->characters != SINK_CHAR) prg += nn->characters;
 
             cur_Node = nn;
         } else {
@@ -39,7 +39,7 @@ oneDepth_prg::oneDepth_prg(std::shared_ptr<auto_Node> root) {
             cur_Node = fixed_point;
 
 
-            if (cur_Node->letter != SINK_CHAR) prg += cur_Node->letter;
+            if (cur_Node->characters != SINK_CHAR) prg += cur_Node->characters;
         }
     }
 };
@@ -69,7 +69,7 @@ void oneDepth_prg::DFFS(std::shared_ptr<auto_Node> cur_Node, std::string alt, st
             var_region.push_back(alt);
         }
         else {
-            std::string new_alt = alt + node->letter;
+            std::string new_alt = alt + node->characters;
             DFFS(node, new_alt, fixed_point);
         }
     }

@@ -7,15 +7,15 @@
 #ifndef HPP_FA
 #define HPP_FA
 
-#define SOURCE_CHAR '#'
-#define SINK_CHAR '$'
+#define SOURCE_CHAR "#"
+#define SINK_CHAR "$"
 
 class auto_Node {
 public:
     auto_Node();
-    ~auto_Node(){std::cout << "Destructor called on " << pos << ":" << letter << std::endl;};
+    ~auto_Node(){std::cout << "Destructor called on " << pos << ":" << characters << std::endl;};
 
-    auto_Node(char l, int pos);
+    auto_Node(std::string l, int pos);
 
     void mark_as_fixed_point() { this->fixed_Point = true; }
 
@@ -27,7 +27,7 @@ public:
 
 
 private:
-    char letter;
+    std::string characters;
     std::set<std::shared_ptr<auto_Node>> next; // Outgoing edges
     std::set<std::shared_ptr<auto_Node>> prev; // Incoming edges
     bool fixed_Point;
@@ -37,8 +37,22 @@ private:
 
 class FA{
 public:
-    FA(MSA &msa);
+    /**
+     * Build Finite Automaton from full multiple-sequence alignment
+     */
+    FA(MSA& msa);
+
+    /**
+     * Build it from delimited boundaries
+     * @param haplotypic_resolution the target sequence size of each node.
+     */
+    FA(MSA& msa, std::shared_ptr<auto_Node> start_point,
+            std::shared_ptr<auto_Node> end_point, int haplotypic_resolution);
     std::shared_ptr<auto_Node> root;
+    std::shared_ptr<auto_Node> getSink() const {return sink;};
+private:
+    std::shared_ptr<auto_Node> sink;
+    const static std::set<char> gapping_chars = {'-', '.'};
 };
 
 #endif

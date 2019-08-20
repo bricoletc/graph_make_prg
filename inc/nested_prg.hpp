@@ -35,7 +35,7 @@ private:
 
 class nested_prg{
 public:
-    nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents = 3);
+    nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents = 3, std::string MSA_file = "");
     std::string prg;
     std::string serialised_prg;
 
@@ -45,6 +45,9 @@ private:
      */
     // User definable parameter controlling how much recombination we want to allow between haplotypes.
     int max_num_incidents;
+
+    // Path to file containing MSA that can be loaded to rewrite portions of graph.
+    std::string MSA_file;
 
     std::unordered_map<std::shared_ptr<auto_Node>,std::shared_ptr<auto_Node>> bubble_map; /**< Maps the start of a local bubble, to its end. */
 

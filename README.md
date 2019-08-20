@@ -22,3 +22,5 @@ A choice needs to be made between adjacent variant site markers vs adjacent site
 [x] Use ~~unique~~ shared pointers for `auto_Node`s
 [] Prg string serialisation: probably assign site numbers based on topological ordering + \
 add the site number to the bubble start node (map of site nb -> auto_Node).
+[] Can have a large inc. fixed point inside another: delete the former, using uncleared \
+fixed_point_numbers map.

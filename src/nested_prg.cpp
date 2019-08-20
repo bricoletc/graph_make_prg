@@ -21,9 +21,10 @@ bool operator < (const incidence_fixed_point& lhs, const incidence_fixed_point& 
    return lhs.pos_earliest_incident < rhs.pos_earliest_incident;
 }
 
-nested_prg::nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents)
+nested_prg::nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents, std::string MSA_file)
     :
-    max_num_incidents(max_num_incidents) {
+    max_num_incidents(max_num_incidents),
+    MSA_file(MSA_file){
     map_all_bubbles(root);
 //std::cout << "Success!";
 //while (!large_incidence_fixed_points.empty()){
@@ -48,7 +49,7 @@ nested_prg::nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents)
 
     // Linear advance to build final prg sequence
     std::shared_ptr<auto_Node> cur_Node = root;
-    while (cur_Node->letter != SINK_CHAR){
+    while (cur_Node->characters != SINK_CHAR){
        if (prg_map.find(cur_Node) != prg_map.end()){
            auto p_Node = prg_map.at(cur_Node);
            prg += p_Node->sequence;
@@ -56,8 +57,8 @@ nested_prg::nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents)
        }
 
        else{
-           if (cur_Node->letter != SOURCE_CHAR && fixed_point_map.find(cur_Node) == fixed_point_map.end()){
-             prg += cur_Node->letter;
+           if (cur_Node->characters != SOURCE_CHAR && fixed_point_map.find(cur_Node) == fixed_point_map.end()){
+             prg += cur_Node->characters;
            }
            cur_Node = *(cur_Node->next.begin());
        }
@@ -69,10 +70,10 @@ nested_prg::nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents)
 
 void nested_prg::map_all_bubbles(std::shared_ptr<auto_Node> root){
     auto cur_Node = root;
-    while (cur_Node->letter != SINK_CHAR){
+    while (cur_Node->characters != SINK_CHAR){
         while (cur_Node->next.size() == 1) cur_Node = *(cur_Node->next.begin());
 
-        if (cur_Node->letter == SINK_CHAR) break;
+        if (cur_Node->characters == SINK_CHAR) break;
         cur_Node = map_bubbles(cur_Node);
     }
 
@@ -137,7 +138,7 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
         fixed_point_map.insert(std::make_pair(fixed_point, prevs));
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Fixed point : " << fixed_point->letter << " at pos: " << fixed_point->pos;
+    BOOST_LOG_TRIVIAL(debug) << "Fixed point : " << fixed_point->characters << " at pos: " << fixed_point->pos;
     bubble_map.insert(std::make_pair(start_point, fixed_point));
 
     // Make or update the incident bubbles
@@ -224,7 +225,7 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
                 try{ // Has this char been committed to PRG string already?
                     if (fixed_point_map.at(nn).size() == 0 ) {;} // Yes: Do nothing
                 }
-                catch(const std::out_of_range &e) {alt += (nn->letter);} //No: commit the char
+                catch(const std::out_of_range &e) {alt += (nn->characters);} //No: commit the char
                 nn = *(nn->next.begin());
             }
         }
@@ -250,11 +251,11 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
     prg_Seq = "[" + prg_Seq + "]";
 
     // Prepend the common string pre bifurcation.
-    if (start_point->letter != SOURCE_CHAR) prg_Seq = start_point->letter + prg_Seq;
+    if (start_point->characters != SOURCE_CHAR) prg_Seq = start_point->characters + prg_Seq;
 
-    // Postpend the common letter post joining
-    if (ancestors.size() == 0 && bubble_map.find(end_point) == bubble_map.end() && end_point->letter != SINK_CHAR){
-      prg_Seq += end_point->letter;
+    // Postpend the common characters post joining
+    if (ancestors.size() == 0 && bubble_map.find(end_point) == bubble_map.end() && end_point->characters != SINK_CHAR){
+      prg_Seq += end_point->characters;
     }
 
     BOOST_LOG_TRIVIAL(debug) << prg_Seq ;
