@@ -21,10 +21,12 @@ bool operator < (const incidence_fixed_point& lhs, const incidence_fixed_point& 
    return lhs.pos_earliest_incident < rhs.pos_earliest_incident;
 }
 
-nested_prg::nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents, std::string MSA_file)
+nested_prg::nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file,
+        bool is_file, int max_num_incidents)
     :
     max_num_incidents(max_num_incidents),
-    MSA_file(MSA_file){
+    MSA_file(MSA_file),
+    is_file(is_file){
     map_all_bubbles(root);
 //std::cout << "Success!";
 //while (!large_incidence_fixed_points.empty()){
@@ -35,8 +37,9 @@ nested_prg::nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents, s
 //    std::cout << "Earliest start bubble: " << f.pos_earliest_incident << std::endl;
 //    std::cout << "Num incidents: " << f.num_incidents<< std::endl;
 //}
-    haplotype_expand_bubbles();
-    exit(0);
+    if (!large_incidence_fixed_points.empty()){
+        haplotype_expand_bubbles();
+    }
 
     // Parse the bubbles, in dependency order
     while(!topological_order.empty()){
@@ -70,22 +73,19 @@ nested_prg::nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents, s
 
 void nested_prg::map_all_bubbles(std::shared_ptr<auto_Node> root){
     auto cur_Node = root;
+    int haplotype_res = 1;
     while (cur_Node->characters != SINK_CHAR){
         while (cur_Node->next.size() == 1) cur_Node = *(cur_Node->next.begin());
 
         if (cur_Node->characters == SINK_CHAR) break;
-        cur_Node = map_bubbles(cur_Node);
+        cur_Node = map_bubbles(cur_Node, haplotype_res);
     }
-
-    // Populate priority queue with high incidence fixed points
-    for (auto& s: fixed_point_numbers){
-        if (s.second.num_incidents > max_num_incidents) large_incidence_fixed_points.insert(s.second);
-    }
-    fixed_point_numbers.clear(); // No longer need this.
+    populate_large_incidences();
+    // fixed_point_numbers.clear(); // No longer need this.
 }
 
 
-std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> start_point) {
+std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> start_point, int haplotype_res) {
     // Return directly if we have already done this work.
     if (bubble_map.find(start_point) != bubble_map.end()) return bubble_map.at(start_point);
 
@@ -116,7 +116,7 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
 
         // Recursive call here.
         if (num_descendents > 1) {
-            auto nn = map_bubbles(cur_Node);
+            auto nn = map_bubbles(cur_Node, haplotype_res);
             if (to_visit.find(nn) != to_visit.end()) continue;
             q.push(nn);
             to_visit.insert(nn);
@@ -147,7 +147,7 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
         i_fixed_point.fixed_point = fixed_point;
         i_fixed_point.earliest_incident = start_point;
         i_fixed_point.pos_earliest_incident = start_point->pos;
-        i_fixed_point.haplotype_resolution = 1;
+        i_fixed_point.haplotype_resolution = haplotype_res;
         i_fixed_point.num_incidents = 1;
        fixed_point_numbers.insert(std::make_pair(fixed_point, i_fixed_point));
     }
@@ -166,12 +166,27 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
 }
 
 void nested_prg::haplotype_expand_bubbles(){
+    MSA msa(MSA_file, is_file);
     while(!large_incidence_fixed_points.empty()){
-        auto& f = *(large_incidence_fixed_points.begin());
+        auto large_incidence = *(large_incidence_fixed_points.begin());
+        fixed_point_numbers.erase(large_incidence.fixed_point); // To avoid infinite cycling in this loop
+        fixed_point_map.erase(large_incidence.fixed_point);
+        if (large_incidence.haplotype_resolution < 256) {
+            delete_in_between(large_incidence.earliest_incident, large_incidence.fixed_point);
+            int haplotype_res = rebuild_in_between(msa, large_incidence);
+            bubble_map.erase(large_incidence.earliest_incident); //Otherwise, will not map the bubble
+            map_bubbles(large_incidence.earliest_incident, haplotype_res);
+        }
+
+        std::cout << "Resolution: " << large_incidence.haplotype_resolution << "\t";
+        //std::cout << "Fixed point pos: " << large_incidence.fixed_point->pos << "\n";
+        //for (auto& s : large_incidence.fixed_point->prev){
+        //    std::cout << s->characters << " " << s->pos << std::endl;
+        //}
         large_incidence_fixed_points.erase(large_incidence_fixed_points.begin());
-        delete_in_between(f.earliest_incident, f.fixed_point);
+
+        if (large_incidence_fixed_points.empty()) populate_large_incidences();
     }
-    exit(0);
 };
 
 void nested_prg::delete_in_between(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point){
@@ -188,9 +203,16 @@ void nested_prg::delete_in_between(std::shared_ptr<auto_Node> start_point, std::
                to_visit.push(visitable);
            }
        }
+
+       // Remove pointers where they might be
        bubble_map.erase(cur_node);
        fixed_point_map.erase(cur_node);
        topological_order.erase(cur_node);
+       if (fixed_point_numbers.find(cur_node) != fixed_point_numbers.end()){
+           auto large_incidence = fixed_point_numbers.at(cur_node);
+           fixed_point_numbers.erase(cur_node);
+           large_incidence_fixed_points.erase(large_incidence);
+       }
 
        cur_node->next.clear();
        cur_node->prev.clear();
@@ -203,6 +225,19 @@ void nested_prg::delete_in_between(std::shared_ptr<auto_Node> start_point, std::
     std::cout << "Num elements visited: " << i << std::endl;
    start_point->next.clear();
    end_point->prev.clear();
+}
+
+int nested_prg::rebuild_in_between(MSA& msa, incidence_fixed_point& i){
+    // Double the haplotype resolution
+    i.haplotype_resolution *= 2;
+  FA fa(msa, i.earliest_incident, i.fixed_point, i.haplotype_resolution);
+  return i.haplotype_resolution;
+}
+
+void nested_prg::populate_large_incidences(){
+    for (auto& s: fixed_point_numbers){
+        if (s.second.num_incidents > max_num_incidents) large_incidence_fixed_points.insert(s.second);
+    }
 }
 
 void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point) {

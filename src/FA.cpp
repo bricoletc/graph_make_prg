@@ -51,7 +51,7 @@ FA::FA(MSA &msa) {
 
             // Create a new node; and make it accessible.
             if (new_Nodes.find(l) == new_Nodes.end()){
-                auto new_Node = std::make_shared<auto_Node>(l, pos);
+                auto new_Node = std::make_shared<auto_Node>(std::string(1,l), pos);
                 new_Nodes.insert(std::make_pair(l, new_Node));
             }
 
@@ -96,10 +96,24 @@ FA::FA(MSA& msa, std::shared_ptr<auto_Node> start_point,
     /**
      * Initialisation
      */
-    int pos = start_point->pos;
-    int N = msa.num_records;
+    assert(start_point->characters.length() == 1);
 
-    msa.reposition(pos); //pos needs to be 0-based
+    // Filter for the positions of the records of interest.
+    msa.reposition(start_point->pos); //pos is the next position fetched by call to `next_column()`
+    std::vector<int> records_of_interest;
+    int N = msa.num_records;
+    auto letters = msa.next_column();
+    char l;
+    for (int i = 0; i < N; i++){
+        l = letters[i];
+        if (start_point->characters == SOURCE_CHAR ||
+            std::string(1,l) == start_point->characters) records_of_interest.push_back(i);
+    }
+    N = static_cast<int>(records_of_interest.size());
+
+
+    int pos = start_point->pos + 1; // Now, we want to start by getting the first column after the start point.
+    msa.reposition(pos); //pos is the next position fetched by call to `next_column()`
 
     std::shared_ptr<auto_Node> cur_Nodes[N];
 
@@ -118,16 +132,18 @@ FA::FA(MSA& msa, std::shared_ptr<auto_Node> start_point,
     /**
      * Iteration: build nodes & edges
      */
-     char l;
      bool gapping;
      int node_pos;
 
-    while (pos != end_point->pos){
+     int end_point_pos;
+     if (end_point->characters == SINK_CHAR) end_point_pos = msa.record_size - 1;
+     else end_point_pos = end_point->pos;
+    while (pos != end_point_pos){
        auto letters = msa.next_column();
 
         for (int i = 0; i < N; i++) {
             gapping = false;
-           l =  letters[i];
+           l =  letters[records_of_interest[i]];
            if (gapping_chars.find(l) != gapping_chars.end()){
                if (buffer[i].length() == 0) continue;
                gapping = true;
@@ -138,8 +154,11 @@ FA::FA(MSA& msa, std::shared_ptr<auto_Node> start_point,
                node_pos = pos;
            }
 
+           // Near the end point, collect sequence of size up to 2*haplotypic_resolution - 1 characters.
+           if (!gapping && end_point->pos - pos < haplotypic_resolution*2 - 1) continue;
+
            // Case: we want a node.
-           if (gapping || buffer[i].length() == haplotypic_resolution){
+           if (gapping || (buffer[i].length() == haplotypic_resolution)){
               if (new_Nodes.find(buffer[i]) == new_Nodes.end()){
                   auto new_Node = std::make_shared<auto_Node>(buffer[i],
                           node_pos - buffer[i].length() + 1);
@@ -156,15 +175,32 @@ FA::FA(MSA& msa, std::shared_ptr<auto_Node> start_point,
            }
         }
 
+        pos++;
         new_Nodes.clear();
     }
 
     // End condition: link to the end_point
+    std::set<std::shared_ptr<auto_Node>> final_Nodes;
     for (int i = 0; i < N; i++) {
         auto cn = cur_Nodes[i];
-        if (buffer[i].length() > 0 ) cn->characters += buffer[i];
-        cn->next.insert(end_point);
-        end_point->prev.insert(cn);
+        if (buffer[i].length() == 0){
+            final_Nodes.insert(cn);
+        }
+        else {
+            if (new_Nodes.find(buffer[i]) == new_Nodes.end()){
+                auto new_Node = std::make_shared<auto_Node>(buffer[i],
+                        node_pos - buffer[i].length() + 1);
+                new_Nodes.insert(std::make_pair(buffer[i], new_Node));
+                final_Nodes.insert(new_Node);
+            }
+            auto& new_Node = new_Nodes.at(buffer[i]);
+            cn->next.insert(new_Node);
+            new_Node->prev.insert(cn);
+        }
+    }
+    for (auto& final_Node : final_Nodes){
+        final_Node->next.insert(end_point);
+        end_point->prev.insert(final_Node);
     }
 
 }

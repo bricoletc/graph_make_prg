@@ -35,7 +35,7 @@ private:
 
 class nested_prg{
 public:
-    nested_prg(std::shared_ptr<auto_Node> root, int max_num_incidents = 3, std::string MSA_file = "");
+    nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 3);
     std::string prg;
     std::string serialised_prg;
 
@@ -48,6 +48,7 @@ private:
 
     // Path to file containing MSA that can be loaded to rewrite portions of graph.
     std::string MSA_file;
+    bool is_file;
 
     std::unordered_map<std::shared_ptr<auto_Node>,std::shared_ptr<auto_Node>> bubble_map; /**< Maps the start of a local bubble, to its end. */
 
@@ -87,7 +88,7 @@ private:
     /**
      * Finds the first `auto_Node` at which all paths going from `start_point` end.
      */
-    std::shared_ptr<auto_Node> map_bubbles(std::shared_ptr<auto_Node> start_point);
+    std::shared_ptr<auto_Node> map_bubbles(std::shared_ptr<auto_Node> start_point, int haplotype_res);
 
     /**
      * Rewrite portions of the graph with decreasing levels of recombination.
@@ -99,6 +100,13 @@ private:
      * Specify the graph source and sink nodes to free the whole graph.
      */
     void delete_in_between(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point);
+
+    int rebuild_in_between(MSA& msa, incidence_fixed_point& i);
+
+    /**
+     * Populate a set with high incidence fixed points
+     */
+    void populate_large_incidences();
 
     /**
      * Traverses a bubble using a depth first search; builds all alleles and wraps them in a prg string.

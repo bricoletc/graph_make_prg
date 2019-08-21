@@ -17,11 +17,12 @@ public:
      */
     std::vector<char> next_column();
     /**
-     * @param new_offset the new alignment column number at which to fetch characters to come.
+     * @param new_offset the alignment column number from which the next characters will come.
      */
     void reposition(int new_offset);
     int num_records;
     bool more_columns;
+    int record_size;
 
 
 private:

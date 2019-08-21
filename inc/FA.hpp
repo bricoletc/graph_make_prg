@@ -13,7 +13,9 @@
 class auto_Node {
 public:
     auto_Node();
-    ~auto_Node(){std::cout << "Destructor called on " << pos << ":" << characters << std::endl;};
+    ~auto_Node(){
+        //std::cout << "Destructor called on " << pos << ":" << characters << std::endl;
+        };
 
     auto_Node(std::string l, int pos);
 
@@ -52,7 +54,7 @@ public:
     std::shared_ptr<auto_Node> getSink() const {return sink;};
 private:
     std::shared_ptr<auto_Node> sink;
-    const static std::set<char> gapping_chars = {'-', '.'};
+    const std::set<char> gapping_chars = {'-', '.'};
 };
 
 #endif

@@ -68,4 +68,22 @@ TEST(MSA, level3Nesting_allEndAtFinalNode) {
     assert(expected == p);
 }
 
-
+/**
+ * Two allelic classes segregate, each containing two SNPs
+ * The graph with nodes of sequence length 1 looks horrible.
+ */
+TEST(MSA, twoSegregatingClasses) {
+    std::string MSA_string = ">R1\n"
+                             "ATCCGA\n"
+                             ">R2\n"
+                             "ATCCAA\n"
+                             ">R3\n"
+                             "ATCAGA\n"
+                             ">R4\n"
+                             "ACGGTA\n"
+                             ">R5\n"
+                             "ACGATA\n"
+                             ">R6\n"
+                             "ACGGAA\n";
+    auto p = make_and_print_prg_string(MSA_string, false);
+}

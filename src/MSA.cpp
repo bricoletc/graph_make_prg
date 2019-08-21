@@ -104,6 +104,7 @@ void MSA::find_starts(std::istream& handle) {
         std::cout << "Error: cannot find any valid records in MSA file provided" << std::endl;
         std::exit(1);
     }
+    record_size = master_record_size;
 }
 
 std::istream& MSA::get_handle(){
@@ -144,7 +145,6 @@ std::vector<char> MSA::next_column() {
         }
 
     }
-
     offset++;
 
     return column;
