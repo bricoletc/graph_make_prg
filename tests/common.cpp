@@ -7,6 +7,7 @@ std::string make_and_print_prg_string(const std::string &MSA_string, bool is_fil
     nested_prg p = nested_prg(fa.root, MSA_string, is_file);
     auto& output = p.prg;
     BOOST_LOG_TRIVIAL(info) << "Produced PRG string of length " << output.length();
+    BOOST_LOG_TRIVIAL(info) << "Produced PRG string of length " << p.serialised_prg.length();
     if (output.length() < 10000){
         std::cout << p.prg << std::endl;
         std::cout << p.serialised_prg << std::endl;

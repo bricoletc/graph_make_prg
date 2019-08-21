@@ -129,16 +129,11 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
     }
 
     auto fixed_point = q.top();
-    // Mark the direct ancestors of the fixed point
     if (fixed_point_map.find(fixed_point) == fixed_point_map.end()){
-        std::set<std::shared_ptr<auto_Node>> prevs;
-        for (auto pn : fixed_point->prev){
-           prevs.insert(pn);
-        }
-        fixed_point_map.insert(std::make_pair(fixed_point, prevs));
-    }
+        fixed_point_map.insert(std::make_pair(fixed_point, 1));
+    } else fixed_point_map.at(fixed_point)++;
 
-    BOOST_LOG_TRIVIAL(debug) << "Fixed point : " << fixed_point->characters << " at pos: " << fixed_point->pos;
+    BOOST_LOG_TRIVIAL(debug)<< "Fixed point : " << fixed_point->characters << " at pos: " << fixed_point->pos;
     bubble_map.insert(std::make_pair(start_point, fixed_point));
 
     // Make or update the incident bubbles
@@ -170,11 +165,11 @@ void nested_prg::haplotype_expand_bubbles(){
     while(!large_incidence_fixed_points.empty()){
         auto large_incidence = *(large_incidence_fixed_points.begin());
         fixed_point_numbers.erase(large_incidence.fixed_point); // To avoid infinite cycling in this loop
-        fixed_point_map.erase(large_incidence.fixed_point);
         if (large_incidence.haplotype_resolution < 256) {
             delete_in_between(large_incidence.earliest_incident, large_incidence.fixed_point);
             int haplotype_res = rebuild_in_between(msa, large_incidence);
             bubble_map.erase(large_incidence.earliest_incident); //Otherwise, will not map the bubble
+            fixed_point_map.erase(large_incidence.fixed_point);
             map_bubbles(large_incidence.earliest_incident, haplotype_res);
         }
 
@@ -242,8 +237,7 @@ void nested_prg::populate_large_incidences(){
 
 void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point) {
     std::vector<std::string> alts;
-    auto ancestors = fixed_point_map.at(end_point);
-
+    auto& num_bubbles_to_process = fixed_point_map.at(end_point);
 
     for (auto nn : start_point->next) {
         std::string alt = "";
@@ -258,22 +252,17 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
                 nn = p_Node->next;
             } else {
                 try{ // Has this char been committed to PRG string already?
-                    if (fixed_point_map.at(nn).size() == 0 ) {;} // Yes: Do nothing
+                    if (fixed_point_map.at(nn) == 0 ) {;} // Yes: Do nothing
                 }
                 catch(const std::out_of_range &e) {alt += (nn->characters);} //No: commit the char
                 nn = *(nn->next.begin());
             }
         }
-        // Important!!: peel off fixed point direct ancestor first time seen.
-        if (ancestors.find(previous) != ancestors.end()) ancestors.erase(previous);
 
         alts.push_back(alt);
     }
 
-    // Update ancestors
-    fixed_point_map.erase(end_point);
-    fixed_point_map.insert(make_pair(end_point,ancestors));
-
+    num_bubbles_to_process -= 1;
     // Make a prg sequence.
     std::string prg_Seq;
 
@@ -289,7 +278,8 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
     if (start_point->characters != SOURCE_CHAR) prg_Seq = start_point->characters + prg_Seq;
 
     // Postpend the common characters post joining
-    if (ancestors.size() == 0 && bubble_map.find(end_point) == bubble_map.end() && end_point->characters != SINK_CHAR){
+    // It is OK to postpend at the last incident bubble, because the bubbles are ordered topologically (innermost first)
+    if (num_bubbles_to_process == 0 && bubble_map.find(end_point) == bubble_map.end() && end_point->characters != SINK_CHAR){
       prg_Seq += end_point->characters;
     }
 

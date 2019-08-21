@@ -60,9 +60,9 @@ private:
     /** Allows checking if an `auto_Node` has a `prg_Node`, in which case the `prg_Node` will be used.*/
     std::unordered_map<std::shared_ptr<auto_Node>, prg_Node*> prg_map;
 
-    /** Maps the end of a local bubble to a set of direct ancestors. When that set is empty, the corresponding
-     * character can be committed to the prg string.*/
-    std::unordered_map<std::shared_ptr<auto_Node>,std::set<std::shared_ptr<auto_Node>>> fixed_point_map;
+    /** Maps the end of a local bubble to the number of bubbles ending in it left to process. When that number is 0,
+     * the corresponding character can be committed to the prg string.*/
+    std::unordered_map<std::shared_ptr<auto_Node>,int> fixed_point_map;
 
     /**
      * Maps the end of a local bubble to a struct containing:
