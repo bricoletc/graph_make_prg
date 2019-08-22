@@ -21,7 +21,11 @@ public:
 
     void mark_as_fixed_point() { this->fixed_Point = true; }
 
-    friend bool operator > (const auto_Node& lhs, const auto_Node& rhs);
+    /**
+     * Compare pointers to `auto_Node`; used in topological ordering (lastmost sequence position first)
+     * Equivalence in a set is defined using this, so we also test whether the pointers are the same objects.
+     */
+    friend bool operator > (const std::shared_ptr<auto_Node>& lhs, const std::shared_ptr<auto_Node>& rhs);
 
     friend class FA;
     friend class oneDepth_prg;

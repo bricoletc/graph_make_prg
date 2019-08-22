@@ -15,8 +15,11 @@ auto_Node::auto_Node(std::string l, int pos)
         pos(pos){
 }
 
-bool operator > (const auto_Node& lhs, const auto_Node& rhs){
-    return lhs.pos > rhs.pos;
+bool operator > (const std::shared_ptr<auto_Node>& lhs, const std::shared_ptr<auto_Node>& rhs){
+    if (lhs->pos == rhs->pos){
+    return lhs.get() > rhs.get();
+    }
+    else return lhs->pos > rhs->pos;
 }
 
 FA::FA(MSA &msa) {
