@@ -87,3 +87,50 @@ TEST(MSA, twoSegregatingClasses) {
                              "ACGGAA\n";
     auto p = make_and_print_prg_string(MSA_string, false);
 }
+
+/**
+ * An indel bubble ends outside of what, in its absence, would be another site.
+ */
+TEST(MSA, leakyBubble) {
+    std::string MSA_string = ">R1\n"
+                             "ATGCAT\n"
+                             ">R2\n"
+                             "AGCTAT\n"
+                             ">R3\n"
+                             "AG---T\n";
+    auto p = make_and_print_prg_string(MSA_string, false);
+}
+
+/**
+ * A set of converging indels for which haplotype expansion is limited for simplifying the graph
+ */
+TEST(MSA, expanded_IndelGraph) {
+    std::string MSA_string = ">R1\n"
+                             "AAAAAAAG\n"
+                             ">R2\n"
+                             "A------G\n"
+                             ">R3\n"
+                             "AA-----G\n"
+                             ">R4\n"
+                             "AAA----G\n"
+                             ">R5\n"
+                             "AAAA---G\n"
+                             ">R6\n"
+                             "AAAAA--G\n"
+                             ">R7\n"
+                             "AAAAAA-G\n";
+    auto p = make_and_print_prg_string(MSA_string, false);
+}
+
+/**
+ * For a number of incident bubbles tolerance parameter >=2, the T/C SNP gets written several times.
+ */
+TEST(MSA, SNP_rewriting) {
+    std::string MSA_string = ">R1\n"
+                             "GCCCA\n"
+                             ">R2\n"
+                             "G-CTA\n"
+                             ">R3\n"
+                             "G--CA\n";
+    auto p = make_and_print_prg_string(MSA_string, false);
+}

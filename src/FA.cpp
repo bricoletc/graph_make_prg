@@ -190,9 +190,11 @@ FA::FA(MSA& msa, std::shared_ptr<auto_Node> start_point,
             final_Nodes.insert(cn);
         }
         else {
+            // Case: the buffer contains non-gapping sequence- if there was a gap prior, it got committed.
+            // So its start position is then end_point position less the sequence length.
             if (new_Nodes.find(buffer[i]) == new_Nodes.end()){
                 auto new_Node = std::make_shared<auto_Node>(buffer[i],
-                        node_pos - buffer[i].length() + 1);
+                        pos - buffer[i].length());
                 new_Nodes.insert(std::make_pair(buffer[i], new_Node));
                 final_Nodes.insert(new_Node);
             }
