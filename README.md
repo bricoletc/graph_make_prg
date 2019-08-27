@@ -1,16 +1,28 @@
 # PRG from MSA
 
+## TL; DR
+
+Rationale: build a sequence graph, starting with one node per aligned character.
+
+The **key parameter** is `num_max_incidents`. Num_incidents is the number of bubbles (fork points)
+that end at a certain sequence node. When this number is large, serialisation to a nested PRG string
+ is extremely redundant.
+ 
+ Instead, when `num_max_incidents` is reached, the outermost bubble is rewritten, with sequence node
+ length doubled. 
+ 
+ Recommended value: 2.
+
 ### One Depth form
 
 ### Nested form
 
-## Test data
+## Unit tests
 Can use strings directly, or files.
 
-### adjacent_markers.fasta
-
-Is here to illustrate a case where adjacent markers cannot be avoided. 
-A choice needs to be made between adjacent variant site markers vs adjacent site and allele markers (ie an empty allele record).
+* successiveDeletions: is here to illustrate:
+    * a case where an empty allele can occur; but this makes genotyping a deletion difficult (using coverage)
+    * adjacent markers cannot be avoided: either you do empty alleles, or have site exit and entry next to each other.
 
 ## TODOs
 

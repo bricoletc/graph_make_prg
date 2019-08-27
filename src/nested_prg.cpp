@@ -172,6 +172,9 @@ void nested_prg::haplotype_expand_bubbles(){
             fixed_point_map.erase(large_incidence.fixed_point);
             map_bubbles(large_incidence.earliest_incident, haplotype_res);
         }
+        else {
+            std::cout << "Hi";
+        }
 
         std::cout << "Resolution: " << large_incidence.haplotype_resolution << "\t";
         //std::cout << "Fixed point pos: " << large_incidence.fixed_point->pos << "\n";
@@ -238,6 +241,7 @@ void nested_prg::populate_large_incidences(){
 void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point) {
     std::vector<std::string> alts;
     auto& num_bubbles_to_process = fixed_point_map.at(end_point);
+    bool direct_deletion = false;
 
     for (auto nn : start_point->next) {
         std::string alt = "";
@@ -258,7 +262,7 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
                 nn = *(nn->next.begin());
             }
         }
-
+        if (alt.length() == 0)  direct_deletion = true;
         alts.push_back(alt);
     }
 
@@ -269,13 +273,15 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
     // Make sure we sort the alleles, so that unit testing is simplified.
     std::sort(alts.begin(), alts.end());
     for (auto s : alts){
+        // Prepend the common string to each allele
+        if (direct_deletion) s = (start_point->characters) + s;
        prg_Seq+= s + ",";
     }
     prg_Seq.pop_back();
     prg_Seq = "[" + prg_Seq + "]";
 
     // Prepend the common string pre bifurcation.
-    if (start_point->characters != SOURCE_CHAR) prg_Seq = start_point->characters + prg_Seq;
+    if (start_point->characters != SOURCE_CHAR && !direct_deletion) prg_Seq = start_point->characters + prg_Seq;
 
     // Postpend the common characters post joining
     // It is OK to postpend at the last incident bubble, because the bubbles are ordered topologically (innermost first)

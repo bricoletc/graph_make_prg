@@ -70,21 +70,22 @@ TEST(MSA, level3Nesting_allEndAtFinalNode) {
 
 /**
  * Two allelic classes segregate, each containing two SNPs
- * The graph with nodes of sequence length 1 looks horrible.
+ * The graph with nodes of sequence length 1 has cross-class 'node sharing'
+ * GOAL: collapse the node sharing with nested output showing the segregating classes.
  */
 TEST(MSA, twoSegregatingClasses) {
     std::string MSA_string = ">R1\n"
-                             "ATCCGA\n"
+                             "AAAAAAAAA\n"
                              ">R2\n"
-                             "ATCCAA\n"
+                             "AATAAAAAA\n"
                              ">R3\n"
-                             "ATCAGA\n"
+                             "AAAAATAAA\n"
                              ">R4\n"
-                             "ACGGTA\n"
+                             "TTTTTTTTT\n"
                              ">R5\n"
-                             "ACGATA\n"
+                             "TTATTTTTT\n"
                              ">R6\n"
-                             "ACGGAA\n";
+                             "TTTTTATTT\n";
     auto p = make_and_print_prg_string(MSA_string, false);
 }
 
@@ -102,7 +103,7 @@ TEST(MSA, leakyBubble) {
 }
 
 /**
- * A set of converging indels for which haplotype expansion is limited for simplifying the graph
+ * A set of indels all converging to one point
  */
 TEST(MSA, expanded_IndelGraph) {
     std::string MSA_string = ">R1\n"
@@ -123,7 +124,8 @@ TEST(MSA, expanded_IndelGraph) {
 }
 
 /**
- * For a number of incident bubbles tolerance parameter >=2, the T/C SNP gets written several times.
+ * For a low number of max incident bubbles parameter, the T/C SNP can get written several times.
+ * GOAL: avoid T/C SNP getting written out several times
  */
 TEST(MSA, SNP_rewriting) {
     std::string MSA_string = ">R1\n"
@@ -132,5 +134,34 @@ TEST(MSA, SNP_rewriting) {
                              "G-CTA\n"
                              ">R3\n"
                              "G--CA\n";
+    auto p = make_and_print_prg_string(MSA_string, false);
+}
+
+/**
+ * A case where empty deletion record could occur.
+ * GOAL: avoid empty allele
+ */
+TEST(MSA, successiveDeletions) {
+    std::string MSA_string = ">R1\n"
+                             "CGAACAAAG\n"
+                             ">R2\n"
+                             "CG--C--AG\n";
+    auto p = make_and_print_prg_string(MSA_string, false);
+ }
+
+ /**
+ * The reason we are doing all this in the first place.
+ */
+TEST(MSA, deletion_spanning_SNPs) {
+    std::string MSA_string = ">R1\n"
+                             "CGAACAAAG\n"
+                             ">R2\n"
+                             "CGTACATAG\n"
+                             ">R3\n"
+                             "CGAGCGAAG\n"
+                             ">R4\n"
+                             "CGAACCAAG\n"
+                             ">R5\n"
+                             "C-------G\n";
     auto p = make_and_print_prg_string(MSA_string, false);
 }

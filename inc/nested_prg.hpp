@@ -35,7 +35,7 @@ private:
 
 class nested_prg{
 public:
-    nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 3);
+    nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 2);
     std::string prg;
     std::string serialised_prg;
 
