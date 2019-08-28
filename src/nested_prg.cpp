@@ -165,7 +165,15 @@ void nested_prg::haplotype_expand_bubbles(){
     while(!large_incidence_fixed_points.empty()){
         auto large_incidence = *(large_incidence_fixed_points.begin());
         fixed_point_numbers.erase(large_incidence.fixed_point); // To avoid infinite cycling in this loop
-        if (large_incidence.haplotype_resolution < 256) {
+
+        // Is there still room for expansion?
+        auto not_fully_expanded = large_incidence.haplotype_resolution <
+            (large_incidence.fixed_point->pos - large_incidence.earliest_incident->pos + 1);
+        // This is an edge case due to sink pos being max_int and source pos being -1, so above test fails.
+        auto edge_condition = large_incidence.fixed_point->characters == SINK_CHAR &&
+                large_incidence.earliest_incident->characters == SOURCE_CHAR;
+
+        if (not_fully_expanded || edge_condition){
             delete_in_between(large_incidence.earliest_incident, large_incidence.fixed_point);
             int haplotype_res = rebuild_in_between(msa, large_incidence);
             bubble_map.erase(large_incidence.earliest_incident); //Otherwise, will not map the bubble
@@ -173,14 +181,11 @@ void nested_prg::haplotype_expand_bubbles(){
             map_bubbles(large_incidence.earliest_incident, haplotype_res);
         }
         else {
-            std::cout << "Hi";
+            BOOST_LOG_TRIVIAL(warning) << "Could not expand bubble: " <<
+                large_incidence.earliest_incident << "beyond its sequence width";
         }
 
-        std::cout << "Resolution: " << large_incidence.haplotype_resolution << "\t";
-        //std::cout << "Fixed point pos: " << large_incidence.fixed_point->pos << "\n";
-        //for (auto& s : large_incidence.fixed_point->prev){
-        //    std::cout << s->characters << " " << s->pos << std::endl;
-        //}
+        BOOST_LOG_TRIVIAL(debug) << "Resolution: " << large_incidence.haplotype_resolution << "\t";
         large_incidence_fixed_points.erase(large_incidence_fixed_points.begin());
 
         if (large_incidence_fixed_points.empty()) populate_large_incidences();
@@ -220,7 +225,7 @@ void nested_prg::delete_in_between(std::shared_ptr<auto_Node> start_point, std::
    for (auto& s: visited){
       i++ ;
    }
-    std::cout << "Num elements visited: " << i << std::endl;
+    BOOST_LOG_TRIVIAL(debug) << "Num elements visited: " << i << std::endl;
    start_point->next.clear();
    end_point->prev.clear();
 }
@@ -242,16 +247,17 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
     std::vector<std::string> alts;
     auto& num_bubbles_to_process = fixed_point_map.at(end_point);
     bool direct_deletion = false;
+    std::set<std::shared_ptr<auto_Node>> used_sites;
 
     for (auto nn : start_point->next) {
         std::string alt = "";
-        // Record the previous node, to wipe it out as an ancestor at the end of the loop.
-        auto previous = start_point;
 
         while (nn != end_point) {
-            previous = nn;
             if (prg_map.find(nn) != prg_map.end()) {
                 auto p_Node = prg_map.at(nn);
+                // TODO: The below assertion is a goal we want to achieve.
+                //assert(used_sites.find(nn) == used_sites.end());
+                used_sites.insert(nn);
                 alt += (p_Node->sequence);
                 nn = p_Node->next;
             } else {

@@ -64,7 +64,7 @@ TEST(MSA, level3Nesting_allEndAtFinalNode) {
                              ">R4\n"
                              "ACCTT\n";
     auto p = make_and_print_prg_string(MSA_string, false);
-    std::string expected = "A[C[C[A,T],G],T]T";
+    std::string expected = "A[CCA,CCT,CG,T]T";
     EXPECT_EQ(expected,p);
 }
 

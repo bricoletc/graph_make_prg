@@ -27,6 +27,8 @@ public:
      */
     friend bool operator > (const std::shared_ptr<auto_Node>& lhs, const std::shared_ptr<auto_Node>& rhs);
 
+    friend std::ostream& operator <<(std::ostream& stream, const std::shared_ptr<auto_Node>& node);
+
     friend class FA;
     friend class oneDepth_prg;
     friend class nested_prg;
