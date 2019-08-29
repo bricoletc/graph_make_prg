@@ -37,7 +37,7 @@ class nested_prg{
 public:
     nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 2);
     std::string prg;
-    std::string serialised_prg;
+    sdsl::int_vector<> encoded_prg;
 
 private:
     /**
@@ -62,14 +62,14 @@ private:
 
     /** Maps the end of a local bubble to the number of bubbles ending in it left to process. When that number is 0,
      * the corresponding character can be committed to the prg string.*/
-    std::unordered_map<std::shared_ptr<auto_Node>,int> fixed_point_map;
+    std::unordered_map<std::shared_ptr<auto_Node>,int> fixed_point_numbers;
 
     /**
      * Maps the end of a local bubble to a struct containing:
      *  - The earliest (positionally) bubble that end into it.
      *  - The number of bubbles that end into it.
      */
-    std::unordered_map<std::shared_ptr<auto_Node>,incidence_fixed_point> fixed_point_numbers;
+    std::unordered_map<std::shared_ptr<auto_Node>,incidence_fixed_point> fixed_point_incidence_map;
 
     std::set<incidence_fixed_point,
         std::less<incidence_fixed_point>> large_incidence_fixed_points;
@@ -113,7 +113,7 @@ private:
      */
     void parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point);
 
-    void serialise_prg();
+    void add_site_numbers_and_binary_encode();
 };
 
 #endif

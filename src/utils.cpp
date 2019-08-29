@@ -9,3 +9,27 @@ void init_logging(const std::string& log_level){
                     logging::trivial::severity >= g_log_level
             );
 }
+
+int encode_char(const char &c) {
+
+    switch (c) {
+        case 'A':
+        case 'a':
+            return 1;
+
+        case 'C':
+        case 'c':
+            return 2;
+
+        case 'G':
+        case 'g':
+            return 3;
+
+        case 'T':
+        case 't':
+            return 4;
+
+        default:
+            throw std::invalid_argument("The provided character is not one of the four standard nucleotides.");
+    }
+}

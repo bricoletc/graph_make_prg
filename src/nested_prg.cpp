@@ -1,8 +1,6 @@
 #include "nested_prg.hpp"
-#include <unordered_map>
 #include <set>
 #include <string>
-#include <stack>
 
 
 prg_Node::prg_Node()
@@ -60,14 +58,14 @@ nested_prg::nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file,
        }
 
        else{
-           if (cur_Node->characters != SOURCE_CHAR && fixed_point_map.find(cur_Node) == fixed_point_map.end()){
+           if (cur_Node->characters != SOURCE_CHAR && fixed_point_numbers.find(cur_Node) == fixed_point_numbers.end()){
              prg += cur_Node->characters;
            }
            cur_Node = *(cur_Node->next.begin());
        }
     }
 
-    serialise_prg();
+    add_site_numbers_and_binary_encode();
 }
 
 
@@ -81,7 +79,6 @@ void nested_prg::map_all_bubbles(std::shared_ptr<auto_Node> root){
         cur_Node = map_bubbles(cur_Node, haplotype_res);
     }
     populate_large_incidences();
-    // fixed_point_numbers.clear(); // No longer need this.
 }
 
 
@@ -129,25 +126,25 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
     }
 
     auto fixed_point = q.top();
-    if (fixed_point_map.find(fixed_point) == fixed_point_map.end()){
-        fixed_point_map.insert(std::make_pair(fixed_point, 1));
-    } else fixed_point_map.at(fixed_point)++;
+    if (fixed_point_numbers.find(fixed_point) == fixed_point_numbers.end()){
+        fixed_point_numbers.insert(std::make_pair(fixed_point, 1));
+    } else fixed_point_numbers.at(fixed_point)++;
 
     BOOST_LOG_TRIVIAL(debug)<< "Fixed point : " << fixed_point->characters << " at pos: " << fixed_point->pos;
     bubble_map.insert(std::make_pair(start_point, fixed_point));
 
     // Make or update the incident bubbles
-    if (fixed_point_numbers.find(fixed_point) == fixed_point_numbers.end()){
+    if (fixed_point_incidence_map.find(fixed_point) == fixed_point_incidence_map.end()){
         incidence_fixed_point i_fixed_point = {};
         i_fixed_point.fixed_point = fixed_point;
         i_fixed_point.earliest_incident = start_point;
         i_fixed_point.pos_earliest_incident = start_point->pos;
         i_fixed_point.haplotype_resolution = haplotype_res;
         i_fixed_point.num_incidents = 1;
-       fixed_point_numbers.insert(std::make_pair(fixed_point, i_fixed_point));
+       fixed_point_incidence_map.insert(std::make_pair(fixed_point, i_fixed_point));
     }
     else{
-        auto& entry = fixed_point_numbers.at(fixed_point);
+        auto& entry = fixed_point_incidence_map.at(fixed_point);
         // Update the bubble entry pointed to, if its position is before.
         if (start_point->pos < entry.pos_earliest_incident){
             entry.earliest_incident = start_point;
@@ -164,7 +161,7 @@ void nested_prg::haplotype_expand_bubbles(){
     MSA msa(MSA_file, is_file);
     while(!large_incidence_fixed_points.empty()){
         auto large_incidence = *(large_incidence_fixed_points.begin());
-        fixed_point_numbers.erase(large_incidence.fixed_point); // To avoid infinite cycling in this loop
+        fixed_point_incidence_map.erase(large_incidence.fixed_point); // To avoid infinite cycling in this loop
 
         // Is there still room for expansion?
         auto not_fully_expanded = large_incidence.haplotype_resolution <
@@ -177,7 +174,7 @@ void nested_prg::haplotype_expand_bubbles(){
             delete_in_between(large_incidence.earliest_incident, large_incidence.fixed_point);
             int haplotype_res = rebuild_in_between(msa, large_incidence);
             bubble_map.erase(large_incidence.earliest_incident); //Otherwise, will not map the bubble
-            fixed_point_map.erase(large_incidence.fixed_point);
+            fixed_point_numbers.erase(large_incidence.fixed_point);
             map_bubbles(large_incidence.earliest_incident, haplotype_res);
         }
         else {
@@ -209,11 +206,11 @@ void nested_prg::delete_in_between(std::shared_ptr<auto_Node> start_point, std::
 
        // Remove pointers where they might be
        bubble_map.erase(cur_node);
-       fixed_point_map.erase(cur_node);
+       fixed_point_numbers.erase(cur_node);
        topological_order.erase(cur_node);
-       if (fixed_point_numbers.find(cur_node) != fixed_point_numbers.end()){
-           auto large_incidence = fixed_point_numbers.at(cur_node);
-           fixed_point_numbers.erase(cur_node);
+       if (fixed_point_incidence_map.find(cur_node) != fixed_point_incidence_map.end()){
+           auto large_incidence = fixed_point_incidence_map.at(cur_node);
+           fixed_point_incidence_map.erase(cur_node);
            large_incidence_fixed_points.erase(large_incidence);
        }
 
@@ -238,14 +235,14 @@ int nested_prg::rebuild_in_between(MSA& msa, incidence_fixed_point& i){
 }
 
 void nested_prg::populate_large_incidences(){
-    for (auto& s: fixed_point_numbers){
+    for (auto& s: fixed_point_incidence_map){
         if (s.second.num_incidents > max_num_incidents) large_incidence_fixed_points.insert(s.second);
     }
 }
 
 void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point) {
     std::vector<std::string> alts;
-    auto& num_bubbles_to_process = fixed_point_map.at(end_point);
+    auto& num_bubbles_to_process = fixed_point_numbers.at(end_point);
     bool direct_deletion = false;
     std::set<std::shared_ptr<auto_Node>> used_sites;
 
@@ -262,7 +259,7 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
                 nn = p_Node->next;
             } else {
                 try{ // Has this char been committed to PRG string already?
-                    if (fixed_point_map.at(nn) == 0 ) {;} // Yes: Do nothing
+                    if (fixed_point_numbers.at(nn) == 0 ) {;} // Yes: Do nothing
                 }
                 catch(const std::out_of_range &e) {alt += (nn->characters);} //No: commit the char
                 nn = *(nn->next.begin());
@@ -302,11 +299,12 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
     prg_map.insert(std::make_pair(start_point,new_Node));
 }
 
-void nested_prg::serialise_prg() {
+void nested_prg::add_site_numbers_and_binary_encode() {
    std::stack<int> marker_stack;
    int max_var_marker{3};
+   int char_count{0};
 
-   std::string serialised_prg = "";
+   sdsl::int_vector<> encoded_prg(this->prg.length(), 0, 32);
    BOOST_LOG_TRIVIAL(debug) << "Prg pre serialisation: " << prg;
    for (int i = 0; i<prg.size(); ++i){
        const auto &c = prg[i];
@@ -315,28 +313,37 @@ void nested_prg::serialise_prg() {
           case '[' : {
               max_var_marker += 2;
               marker_stack.push(max_var_marker);
-              serialised_prg += " " + std::to_string(max_var_marker) + " ";
+              encoded_prg[char_count++] = max_var_marker;
               break;
           }
 
           case ']' : {
               assert(!marker_stack.empty());
-              serialised_prg += std::to_string(marker_stack.top() + 1) + "$ ";
+              encoded_prg[char_count++] = marker_stack.top() + 1;
               marker_stack.pop();
               break;
           }
 
           case ',' : {
               assert(!marker_stack.empty());
-              serialised_prg += std::to_string(marker_stack.top() + 1);
+              encoded_prg[char_count++] = marker_stack.top() + 1;
               break;
           }
 
-          default : serialised_prg += c;
-                    break;
+          default : {
+              try {
+                  encoded_prg[char_count++] = encode_char(c);
+                  break;
+              }
+              catch(std::exception& e){
+                  BOOST_LOG_TRIVIAL(error) << e.what();
+                  exit(1);
+              }
+          }
       }
    }
 
-   this->serialised_prg = serialised_prg;
+   this->encoded_prg = encoded_prg;
    BOOST_LOG_TRIVIAL(info) << "Number of sites produced: " << (max_var_marker -3 ) / 2;
 }
+
