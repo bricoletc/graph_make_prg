@@ -83,13 +83,13 @@ void nested_prg::map_all_bubbles(std::shared_ptr<auto_Node> root){
 
 
 std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> start_point, int haplotype_res) {
-    // Return directly if we have already done this work.
-    if (bubble_map.find(start_point) != bubble_map.end()) return bubble_map.at(start_point);
+
+    bool site_convergence{false};
+    std::set<std::shared_ptr<auto_Node> > seen_bubbles;
 
     // Commit this start point to the topological order stack.
     topological_order.insert(start_point);
 
-    //std::deque<std::shared_ptr<auto_Node>> q;
     auto cmp = [](std::shared_ptr<auto_Node> p1, std::shared_ptr<auto_Node> p2) { return p1->pos > p2->pos; };
     std::priority_queue<std::shared_ptr<auto_Node> , std::vector<std::shared_ptr<auto_Node> >, decltype(cmp)> q(cmp);
     std::set<std::shared_ptr<auto_Node> > to_visit;
@@ -109,23 +109,37 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
         to_visit.erase(cur_Node);
 
 
-        auto num_descendents = cur_Node->next.size();
-
-        // Recursive call here.
-        if (num_descendents > 1) {
-            auto nn = map_bubbles(cur_Node, haplotype_res);
-            if (to_visit.find(nn) != to_visit.end()) continue;
-            q.push(nn);
-            to_visit.insert(nn);
-        } else {
-            auto nn = *(cur_Node->next.begin());
-            if (to_visit.find(nn) != to_visit.end()) continue;
-            q.push(nn);
-            to_visit.insert(nn);
+        // Look for site convergence
+        if (seen_bubbles.find(cur_Node) != seen_bubbles.end()) site_convergence = true;
+        for (auto& s : cur_Node->next){
+            if (s->next.size() < 2) continue;
+            if (seen_bubbles.find(s) != seen_bubbles.end()) {
+                site_convergence = true;
+            }
+            else seen_bubbles.insert(s);
         }
+
+        std::shared_ptr<auto_Node> nn;
+        auto num_descendents = cur_Node->next.size();
+        if (num_descendents > 1) {
+            // Avoid re-doing the work if we have mapped the bubble already
+            if (bubble_map.find(cur_Node) != bubble_map.end()) nn = bubble_map.at(cur_Node);
+            // Recursive call here.
+            else nn = map_bubbles(cur_Node, haplotype_res);
+        }
+        else if (num_descendents == 0) continue;
+        else nn = *(cur_Node->next.begin());
+
+        // Avoid processing more than once
+        if (to_visit.find(nn) != to_visit.end()) continue;
+        q.push(nn);
+        to_visit.insert(nn);
     }
 
     auto fixed_point = q.top();
+    // Remove site convergence under a specific edge case
+    if (seen_bubbles.size() == 1 && *(seen_bubbles.begin()) == fixed_point) site_convergence = false;
+
     if (fixed_point_numbers.find(fixed_point) == fixed_point_numbers.end()){
         fixed_point_numbers.insert(std::make_pair(fixed_point, 1));
     } else fixed_point_numbers.at(fixed_point)++;
@@ -140,7 +154,7 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
         i_fixed_point.earliest_incident = start_point;
         i_fixed_point.pos_earliest_incident = start_point->pos;
         i_fixed_point.haplotype_resolution = haplotype_res;
-        i_fixed_point.num_incidents = 1;
+        site_convergence ? i_fixed_point.num_incidents = max_num_incidents + 1 : i_fixed_point.num_incidents = 1;
        fixed_point_incidence_map.insert(std::make_pair(fixed_point, i_fixed_point));
     }
     else{
@@ -151,7 +165,7 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
             entry.pos_earliest_incident = start_point->pos;
         }
         // Increment the number of incident bubbles.
-        entry.num_incidents++;
+        site_convergence ? entry.num_incidents = max_num_incidents + 1 : entry.num_incidents++;
     }
 
     return fixed_point;
@@ -165,10 +179,11 @@ void nested_prg::haplotype_expand_bubbles(){
 
         // Is there still room for expansion?
         auto not_fully_expanded = large_incidence.haplotype_resolution <
-            (large_incidence.fixed_point->pos - large_incidence.earliest_incident->pos + 1);
-        // This is an edge case due to sink pos being max_int and source pos being -1, so above test fails.
+            (large_incidence.fixed_point->pos - large_incidence.earliest_incident->pos - 1);
+        // This is an edge case due to sink pos being max_int and source pos being -1 or 0, so above test fails due to
+        // max_int overflow.
         auto edge_condition = large_incidence.fixed_point->characters == SINK_CHAR &&
-                large_incidence.earliest_incident->characters == SOURCE_CHAR;
+                large_incidence.pos_earliest_incident <= 0;
 
         if (not_fully_expanded || edge_condition){
             delete_in_between(large_incidence.earliest_incident, large_incidence.fixed_point);
@@ -252,8 +267,8 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
         while (nn != end_point) {
             if (prg_map.find(nn) != prg_map.end()) {
                 auto p_Node = prg_map.at(nn);
-                // TODO: The below assertion is a goal we want to achieve.
-                //assert(used_sites.find(nn) == used_sites.end());
+                // The below assertion is a goal we need to achieve for sites to be unambiguously identified.
+                assert(used_sites.find(nn) == used_sites.end());
                 used_sites.insert(nn);
                 alt += (p_Node->sequence);
                 nn = p_Node->next;

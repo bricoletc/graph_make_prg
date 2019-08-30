@@ -103,9 +103,6 @@ FA::FA(MSA &msa, std::shared_ptr<auto_Node> start_point,
     /**
      * Initialisation
      */
-     if (start_point->characters.length() > 1){
-         std::cout << "H";
-     }
     assert(start_point->characters.length() == 1);
 
     // Filter for the positions of the records of interest.
