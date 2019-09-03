@@ -1,4 +1,4 @@
-#include "nested_prg.hpp"
+#include "sequence_graph.hpp"
 #include <set>
 #include <string>
 
@@ -19,32 +19,21 @@ bool operator < (const incidence_fixed_point& lhs, const incidence_fixed_point& 
    return lhs.pos_earliest_incident < rhs.pos_earliest_incident;
 }
 
-nested_prg::nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file,
-        bool is_file, int max_num_incidents)
+sequence_Graph::sequence_Graph(std::shared_ptr<auto_Node> root, std::string MSA_file,
+                               bool is_file, int max_num_incidents)
     :
     max_num_incidents(max_num_incidents),
     MSA_file(MSA_file),
     is_file(is_file){
     map_all_bubbles(root);
-//std::cout << "Success!";
-//while (!large_incidence_fixed_points.empty()){
-//    auto& f = large_incidence_fixed_points.top();
-//    large_incidence_fixed_points.pop();
-//    std::cout << std::endl;
-//    std::cout << "Pos: " << f.fixed_point->pos << std::endl;
-//    std::cout << "Earliest start bubble: " << f.pos_earliest_incident << std::endl;
-//    std::cout << "Num incidents: " << f.num_incidents<< std::endl;
-//}
     if (!large_incidence_fixed_points.empty()){
         haplotype_expand_bubbles();
     }
 
     // Parse the bubbles, in dependency order
-    while(!topological_order.empty()){
-        auto& start_point = *(topological_order.begin());
-        topological_order.erase(topological_order.begin());
-        auto& end_point = bubble_map.at(start_point);
-
+    for (auto& pair : bubble_map){
+        auto& start_point = pair.first;
+        auto& end_point = pair.second;
         parse_bubbles(start_point,end_point);
     }
 
@@ -69,7 +58,7 @@ nested_prg::nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file,
 }
 
 
-void nested_prg::map_all_bubbles(std::shared_ptr<auto_Node> root){
+void sequence_Graph::map_all_bubbles(std::shared_ptr<auto_Node> root){
     auto cur_Node = root;
     int haplotype_res = 1;
     while (cur_Node->characters != SINK_CHAR){
@@ -82,13 +71,10 @@ void nested_prg::map_all_bubbles(std::shared_ptr<auto_Node> root){
 }
 
 
-std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> start_point, int haplotype_res) {
+std::shared_ptr<auto_Node> sequence_Graph::map_bubbles(std::shared_ptr<auto_Node> start_point, int haplotype_res) {
 
     bool site_convergence{false};
     std::set<std::shared_ptr<auto_Node> > seen_bubbles;
-
-    // Commit this start point to the topological order stack.
-    topological_order.insert(start_point);
 
     auto cmp = [](std::shared_ptr<auto_Node> p1, std::shared_ptr<auto_Node> p2) { return p1->pos > p2->pos; };
     std::priority_queue<std::shared_ptr<auto_Node> , std::vector<std::shared_ptr<auto_Node> >, decltype(cmp)> q(cmp);
@@ -171,7 +157,7 @@ std::shared_ptr<auto_Node> nested_prg::map_bubbles(std::shared_ptr<auto_Node> st
     return fixed_point;
 }
 
-void nested_prg::haplotype_expand_bubbles(){
+void sequence_Graph::haplotype_expand_bubbles(){
     MSA msa(MSA_file, is_file);
     while(!large_incidence_fixed_points.empty()){
         auto large_incidence = *(large_incidence_fixed_points.begin());
@@ -204,7 +190,7 @@ void nested_prg::haplotype_expand_bubbles(){
     }
 };
 
-void nested_prg::delete_in_between(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point){
+void sequence_Graph::delete_in_between(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point){
    std::stack<std::shared_ptr<auto_Node>> to_visit;
    std::set<std::shared_ptr<auto_Node>> visited;
    for (auto& visitable : start_point->next){
@@ -222,7 +208,6 @@ void nested_prg::delete_in_between(std::shared_ptr<auto_Node> start_point, std::
        // Remove pointers where they might be
        bubble_map.erase(cur_node);
        fixed_point_numbers.erase(cur_node);
-       topological_order.erase(cur_node);
        if (fixed_point_incidence_map.find(cur_node) != fixed_point_incidence_map.end()){
            auto large_incidence = fixed_point_incidence_map.at(cur_node);
            fixed_point_incidence_map.erase(cur_node);
@@ -242,20 +227,20 @@ void nested_prg::delete_in_between(std::shared_ptr<auto_Node> start_point, std::
    end_point->prev.clear();
 }
 
-int nested_prg::rebuild_in_between(MSA& msa, incidence_fixed_point& i){
+int sequence_Graph::rebuild_in_between(MSA& msa, incidence_fixed_point& i){
     // Double the haplotype resolution
     i.haplotype_resolution *= 2;
   FA fa(msa, i.earliest_incident, i.fixed_point, i.haplotype_resolution);
   return i.haplotype_resolution;
 }
 
-void nested_prg::populate_large_incidences(){
+void sequence_Graph::populate_large_incidences(){
     for (auto& s: fixed_point_incidence_map){
         if (s.second.num_incidents > max_num_incidents) large_incidence_fixed_points.insert(s.second);
     }
 }
 
-void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point) {
+void sequence_Graph::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point) {
     std::vector<std::string> alts;
     auto& num_bubbles_to_process = fixed_point_numbers.at(end_point);
     bool direct_deletion = false;
@@ -314,7 +299,7 @@ void nested_prg::parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shar
     prg_map.insert(std::make_pair(start_point,new_Node));
 }
 
-void nested_prg::add_site_numbers_and_binary_encode() {
+void sequence_Graph::add_site_numbers_and_binary_encode() {
    std::stack<int> marker_stack;
    int max_var_marker{3};
    int char_count{0};

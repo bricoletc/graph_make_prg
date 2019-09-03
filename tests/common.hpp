@@ -1,4 +1,5 @@
-#include "nested_prg.hpp"
+#include "sequence_graph.hpp"
+#include "coverage_graph.hpp"
 #include "utils.hpp"
 
 #ifndef HPP_COMMON_TESTS

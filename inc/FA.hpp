@@ -31,7 +31,9 @@ public:
 
     friend class FA;
     friend class oneDepth_prg;
-    friend class nested_prg;
+    friend class sequence_Graph;
+    friend class coverage_Node;
+    friend class coverage_Graph;
 
 
 private:

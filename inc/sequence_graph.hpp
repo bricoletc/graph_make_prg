@@ -26,18 +26,20 @@ public:
     prg_Node();
     prg_Node(std::string sequence, std::shared_ptr<auto_Node> next);
 
-    friend class nested_prg;
+    friend class sequence_Graph;
 
 private:
     std::string sequence;
     std::shared_ptr<auto_Node> next;
 };
 
-class nested_prg{
+class sequence_Graph{
 public:
-    nested_prg(std::shared_ptr<auto_Node> root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 2);
+    sequence_Graph(std::shared_ptr<auto_Node> root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 2);
     std::string prg;
     sdsl::int_vector<> encoded_prg;
+
+    friend class coverage_Graph;
 
 private:
     /**
@@ -50,11 +52,11 @@ private:
     std::string MSA_file;
     bool is_file;
 
-    std::unordered_map<std::shared_ptr<auto_Node>,std::shared_ptr<auto_Node>> bubble_map; /**< Maps the start of a local bubble, to its end. */
-
-    /**< Topological ordering of the FA object; children nodes appear before parent nodes. */
-    std::set<std::shared_ptr<auto_Node>,
-        std::greater<std::shared_ptr<auto_Node>>> topological_order;
+    /** Maps the start of a local bubble, to its end.
+     * Children nodes appear before parent nodes.
+     * */
+    std::map<std::shared_ptr<auto_Node>,std::shared_ptr<auto_Node>,
+        std::greater<std::shared_ptr<auto_Node>> > bubble_map;
 
 
     /** Allows checking if an `auto_Node` has a `prg_Node`, in which case the `prg_Node` will be used.*/
