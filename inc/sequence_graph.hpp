@@ -20,18 +20,6 @@ struct incidence_fixed_point{
     friend bool operator < (const incidence_fixed_point& lhs, const incidence_fixed_point& rhs);
 };
 
-class prg_Node{
-
-public:
-    prg_Node();
-    prg_Node(std::string sequence, std::shared_ptr<auto_Node> next);
-
-    friend class sequence_Graph;
-
-private:
-    std::string sequence;
-    std::shared_ptr<auto_Node> next;
-};
 
 class sequence_Graph{
 public:
@@ -61,8 +49,6 @@ private:
         std::greater<std::shared_ptr<auto_Node>> > bubble_map;
 
 
-    /** Allows checking if an `auto_Node` has a `prg_Node`, in which case the `prg_Node` will be used.*/
-    std::unordered_map<std::shared_ptr<auto_Node>, prg_Node*> prg_map;
 
     /** Maps the end of a local bubble to the number of bubbles ending in it left to process. When that number is 0,
      * the corresponding character can be committed to the prg string.*/
@@ -112,12 +98,7 @@ private:
      */
     void populate_large_incidences();
 
-    /**
-     * Traverses a bubble using a depth first search; builds all alleles and wraps them in a prg string.
-     */
-    void parse_bubbles(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point);
 
-    void add_site_numbers_and_binary_encode();
 };
 
 #endif

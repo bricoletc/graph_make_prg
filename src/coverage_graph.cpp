@@ -9,7 +9,7 @@ sequence(seq), pos(pos), site_ID(site_ID), allele_ID(allele_ID) {
 }
 
 coverage_Node::coverage_Node(auto_Node const& node_in, int const site_ID, int const allele_ID) :
-sequence(node_in.characters), pos(node_in.pos), site_ID(site_ID), allele_ID(allele_ID){
+        sequence(node_in.sequence), pos(node_in.pos), site_ID(site_ID), allele_ID(allele_ID){
     if (site_ID == 0 && allele_ID == 0) is_in_site = false;
     else is_in_site = true;
 
@@ -78,7 +78,7 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
 
            while (cur_Node != s.second){
                if (cur_Node->prev.size() >= 1 && cur_Node->next.size() == 1){
-                   seqBuffer += cur_Node->characters;
+                   seqBuffer += cur_Node->sequence;
                    cur_Node = *(cur_Node->next.begin());
                    // If we have reached the bubble end, we need not to skip processing the sequence buffer.
                    if (cur_Node != s.second) continue;
@@ -127,11 +127,11 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
     cur_Node = graph_in.root;
     cur_pos = cur_Node->pos;
 
-    while(cur_Node->characters != SINK_CHAR){
+    while(cur_Node->sequence != SINK_CHAR){
        if (cur_Node->next.size() == 1) {
-           seqBuffer += cur_Node->characters;
+           seqBuffer += cur_Node->sequence;
            cur_Node = *(cur_Node->next.begin());
-           if (cur_Node->characters != SINK_CHAR) continue;
+           if (cur_Node->sequence != SINK_CHAR) continue;
        }
 
        if (seqBuffer.size() > 0){
@@ -145,7 +145,7 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
           }
 
        // Case: we have a bubble
-       if (cur_Node->characters != SINK_CHAR){
+       if (cur_Node->sequence != SINK_CHAR){
            auto& translated_bubble = bubble_translation_map.at(cur_Node); // Will throw error if not there; it ought to be.
            backWire = bubble_map.at(translated_bubble);
            cur_Node = t_b_m.at(cur_Node);

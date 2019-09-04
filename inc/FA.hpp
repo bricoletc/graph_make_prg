@@ -37,7 +37,7 @@ public:
 
 
 private:
-    std::string characters;
+    std::string sequence;
     std::set<std::shared_ptr<auto_Node>> next; // Outgoing edges
     std::set<std::shared_ptr<auto_Node>> prev; // Incoming edges
     bool fixed_Point;

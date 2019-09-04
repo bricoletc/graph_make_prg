@@ -3,14 +3,14 @@
 
 auto_Node::auto_Node()
         :
-        characters(""),
+        sequence(""),
         fixed_Point(false),
         pos(-1) {
 }
 
 auto_Node::auto_Node(std::string l, int pos)
         :
-        characters(l),
+        sequence(l),
         fixed_Point(false),
         pos(pos) {
 }
@@ -22,7 +22,7 @@ bool operator>(const std::shared_ptr<auto_Node> &lhs, const std::shared_ptr<auto
 }
 
 std::ostream& operator <<(std::ostream& stream, const std::shared_ptr<auto_Node>& node){
-    stream << "\n" << "Auto Node: sequence " << node->characters << ", position " << node->pos << "\n";
+    stream << "\n" << "Auto Node: sequence " << node->sequence << ", position " << node->pos << "\n";
     return stream;
 }
 
@@ -103,7 +103,7 @@ FA::FA(MSA &msa, std::shared_ptr<auto_Node> start_point,
     /**
      * Initialisation
      */
-    assert(start_point->characters.length() == 1);
+    assert(start_point->sequence.length() == 1);
 
     // Filter for the positions of the records of interest.
     msa.reposition(start_point->pos); //pos is the next position fetched by call to `next_column()`
@@ -113,8 +113,8 @@ FA::FA(MSA &msa, std::shared_ptr<auto_Node> start_point,
     char l;
     for (int i = 0; i < N; i++) {
         l = letters[i];
-        if (start_point->characters == SOURCE_CHAR ||
-            std::string(1, l) == start_point->characters)
+        if (start_point->sequence == SOURCE_CHAR ||
+            std::string(1, l) == start_point->sequence)
             records_of_interest.push_back(i);
     }
     N = static_cast<int>(records_of_interest.size());
@@ -146,7 +146,7 @@ FA::FA(MSA &msa, std::shared_ptr<auto_Node> start_point,
     int end_point_pos;
     bool gap_found;
     bool irregular_buffer;
-    if (end_point->characters == SINK_CHAR) end_point_pos = msa.record_size - 1;
+    if (end_point->sequence == SINK_CHAR) end_point_pos = msa.record_size - 1;
     else end_point_pos = end_point->pos;
     while (pos != end_point_pos) {
         gap_found = false; irregular_buffer = false;
