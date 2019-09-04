@@ -2,6 +2,7 @@
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/filesystem.hpp>
+#include <sdsl/suffix_arrays.hpp>
 
 #ifndef HPP_UTILS
 #define HPP_UTILS

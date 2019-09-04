@@ -33,7 +33,7 @@ public:
      * Build a coverage graph from an existing sequence graph.
      */
     coverage_Graph(sequence_Graph const& graph_in);
-private:
+
     /** Maps the start of a local bubble, to its end.
      * Children nodes appear before parent nodes.
      */

@@ -24,10 +24,9 @@ struct incidence_fixed_point{
 class sequence_Graph{
 public:
     sequence_Graph(std::shared_ptr<auto_Node> root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 2);
-    std::string prg;
-    sdsl::int_vector<> encoded_prg;
 
     friend class coverage_Graph;
+    template<typename graph_T, typename node_T> friend class stringified_PRG;
 
 private:
     /**

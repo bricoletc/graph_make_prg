@@ -34,6 +34,7 @@ public:
     friend class sequence_Graph;
     friend class coverage_Node;
     friend class coverage_Graph;
+    template<typename graph_T, typename node_T> friend class stringified_PRG;
 
 
 private:
