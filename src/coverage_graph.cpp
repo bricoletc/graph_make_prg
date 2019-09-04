@@ -24,8 +24,9 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
     // maps the coverage graph bubble equivalent.
     std::unordered_map<std::shared_ptr<auto_Node>, std::shared_ptr<coverage_Node> > bubble_translation_map;
     auto& t_b_m = graph_in.bubble_map; // Template bubble map
-    std::shared_ptr<coverage_Node> backWire;
-    int cur_pos; std::string seqBuffer{""};
+    std::shared_ptr<coverage_Node> backWire; // Points to latest previous node
+    int cur_pos; std::string seqBuffer{""}; // For giving new nodes sequence
+    std::shared_ptr<auto_Node> cur_Node; // For traversing the in graph.
     int site_ID = 0;
     int allele_ID;
     std::set<std::shared_ptr<coverage_Node>> known_fixed_points;
@@ -35,14 +36,46 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
         allele_ID = 0;
         site_ID++;
         auto bubble_entry = std::make_shared<coverage_Node>(*s.first, site_ID, allele_ID);
-        auto bubble_exit = std::make_shared<coverage_Node>(*s.second, site_ID, 0);
+        auto bubble_exit = std::make_shared<coverage_Node>(*s.second, site_ID, allele_ID);
         cur_pos = s.first->pos + 1;
         bool skip_fixed_point{false};
+        bool deletion_bubble{false};
+        std::string deletion_prefix{""};
 
+        // Determine whether we have a direct deletion; if so we need to add some sequence
+        // Meaning, we will take the last character of the bubble entry's sequence, take it out from the bubble entry,
+        // And preprend it to each allele in the bubble.
+        // TODO: do not do this if the bubble starts at SOURCE_CHAR
+        for (auto& nn : s.first->next){
+            if (nn == s.second) {
+                if (!deletion_bubble){
+                    deletion_bubble = true;
+                    deletion_prefix = bubble_entry->sequence.back();
+                    bubble_entry->sequence = bubble_entry->sequence.substr(0,bubble_entry->sequence.size() - 1);
+                    cur_pos--;
+                }
+            }
+        }
+
+        // Traverse each allele of the bubble
         for (auto& path_seed : s.first->next){
+            seqBuffer = "";
             backWire = bubble_entry;
             allele_ID++;
-           auto cur_Node = path_seed;
+           cur_Node = path_seed;
+
+           // Check for direct deletion
+           // And make sure there is sequence in paths that directly join bubble start to bubble end.
+           if (deletion_bubble){
+              seqBuffer += deletion_prefix;
+              if (cur_Node == s.second){
+                  auto new_Node = std::make_shared<coverage_Node>(seqBuffer, cur_pos, site_ID, allele_ID);
+                  new_Node->prev.insert(backWire);
+                  backWire->next.insert(new_Node);
+                  backWire = new_Node;
+              }
+           }
+
            while (cur_Node != s.second){
                if (cur_Node->prev.size() >= 1 && cur_Node->next.size() == 1){
                    seqBuffer += cur_Node->characters;
@@ -87,4 +120,41 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
         bubble_map.insert(std::make_pair(bubble_entry,bubble_exit));
         known_fixed_points.insert(bubble_exit);
     };
-}
+
+    // Finally, a linear traversal to generate and wire the non-variant bits.
+    seqBuffer = "";
+    backWire = nullptr;
+    cur_Node = graph_in.root;
+    cur_pos = cur_Node->pos;
+
+    while(cur_Node->characters != SINK_CHAR){
+       if (cur_Node->next.size() == 1) {
+           seqBuffer += cur_Node->characters;
+           cur_Node = *(cur_Node->next.begin());
+           if (cur_Node->characters != SINK_CHAR) continue;
+       }
+
+       if (seqBuffer.size() > 0){
+          auto new_Node = std::make_shared<coverage_Node>(seqBuffer, cur_pos, 0, 0);
+          seqBuffer = "";
+          if (backWire != nullptr) {
+              new_Node->prev.insert(backWire);
+              backWire->next.insert(new_Node);
+          }
+           backWire = new_Node;
+          }
+
+       // Case: we have a bubble
+       if (cur_Node->characters != SINK_CHAR){
+           auto& translated_bubble = bubble_translation_map.at(cur_Node); // Will throw error if not there; it ought to be.
+           backWire = bubble_map.at(translated_bubble);
+           cur_Node = t_b_m.at(cur_Node);
+           cur_pos = cur_Node->pos + 1;
+       }
+       }
+        if (backWire->sequence != SINK_CHAR){ // The sink is not a bubble end, it does not exist yet.
+            auto new_Node = std::make_shared<coverage_Node>(SINK_CHAR, cur_pos, 0, 0);
+            new_Node->prev.insert(backWire);
+            backWire->next.insert(new_Node);
+        }
+    }

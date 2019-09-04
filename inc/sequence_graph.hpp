@@ -45,6 +45,8 @@ private:
     /**
      * Data structures
      */
+     std::shared_ptr<auto_Node> root;
+
     // User definable parameter controlling how much recombination we want to allow between haplotypes.
     int max_num_incidents;
 

@@ -24,7 +24,8 @@ sequence_Graph::sequence_Graph(std::shared_ptr<auto_Node> root, std::string MSA_
     :
     max_num_incidents(max_num_incidents),
     MSA_file(MSA_file),
-    is_file(is_file){
+    is_file(is_file),
+    root(root){
     map_all_bubbles(root);
     if (!large_incidence_fixed_points.empty()){
         haplotype_expand_bubbles();

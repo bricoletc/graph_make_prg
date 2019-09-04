@@ -36,6 +36,8 @@ Can use strings directly, or files.
 - [ ] Consider enumerating (DFS-ing) all paths within small bubbles; 
 gramtools will appreciate this (concurrent allele querying). Cf test `SNP_rewriting`
 - [ ] Prg string serialisation: probably assign site numbers based on topological ordering + 
+- [ ] Refactor graph code into smaller functions
+- [ ] ^^Unit test those functions^^
 - [x] Debugging mode for writing out useful information using boost
 - [x] Google test framework
 add the site number to the bubble start node (map of site nb -> auto_Node).
