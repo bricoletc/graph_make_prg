@@ -16,9 +16,16 @@ Define 'not viable' as :
 When `num_max_incidents` is reached, the outermost bubble is rewritten, with sequence node
  length doubled. Current value: 2.
 
-### One Depth form
+### Nested Sequence Graph
+Is built as a first step; does the haplotype expansion.
 
-### Nested form
+### Nested Coverage graph
+Is built from the sequence graph, with optimisations:
+    * Nodes are compressed to 'unitigs', when a node has single outgoing edge to node
+    with single incoming edge.
+    * Direct deletions are converted to nodes with the bubble entry prepended.
+    
+This graph supports recording per base coverage during `quasimap`.
 
 ## Unit tests
 Can use strings directly, or files.
@@ -35,7 +42,7 @@ Can use strings directly, or files.
 - [ ] Make a .gfa of built graph
 - [ ] Consider enumerating (DFS-ing) all paths within small bubbles; 
 gramtools will appreciate this (concurrent allele querying). Cf test `SNP_rewriting`
-- [ ] Prg string serialisation: probably assign site numbers based on topological ordering + 
+- [x] Prg string serialisation: probably assign site numbers based on topological ordering + 
 - [ ] Refactor graph code into smaller functions
 - [ ] ^^Unit test those functions^^
 - [x] Debugging mode for writing out useful information using boost

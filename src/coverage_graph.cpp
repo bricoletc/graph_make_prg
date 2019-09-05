@@ -89,7 +89,10 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
 
            while (cur_Node != s.second){
                if (cur_Node->prev.size() >= 1 && cur_Node->next.size() == 1){
-                   seqBuffer += cur_Node->sequence;
+                   // Only commit the sequence if we are not in a bubble end.
+                   if (exit_translation_map.find(cur_Node) == exit_translation_map.end()){
+                       seqBuffer += cur_Node->sequence;
+                   }
                    cur_Node = *(cur_Node->next.begin());
                    // If we have reached the bubble end, we need to not skip processing the sequence buffer.
                    if (cur_Node != s.second) continue;
@@ -106,9 +109,12 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
                }
 
                if (t_b_m.find(cur_Node) != t_b_m.end() && cur_Node != s.second){
-                   auto& translated_bubble = entry_translation_map.at(cur_Node);
-                   translated_bubble->prev.insert(backWire);
-                   backWire->next.insert(translated_bubble);
+                   auto translated_bubble = entry_translation_map.at(cur_Node);
+                   // Avoid self link if the node is both a bubble end and a bubble start.
+                   if (backWire != translated_bubble){
+                       translated_bubble->prev.insert(backWire);
+                       backWire->next.insert(translated_bubble);
+                   }
                    backWire = bubble_map.at(translated_bubble);
                    cur_Node = t_b_m.at(cur_Node);
                    cur_pos = cur_Node->pos + 1;
@@ -126,7 +132,12 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
                 bubble_exit = exit_translation_map.at(s.second);
             }
             else { // Never seen it before: make it
-                bubble_exit = std::make_shared<coverage_Node>(*s.second, 0, 0);
+                // If the bubble ends where a bubble start, use that node!
+                if (t_b_m.find(cur_Node) != t_b_m.end()){
+                    auto translated_bubble = entry_translation_map.at(cur_Node);
+                    bubble_exit = translated_bubble;
+                }
+                else bubble_exit = std::make_shared<coverage_Node>(*s.second, 0, 0);
                 exit_translation_map.insert({s.second, bubble_exit});
                 // Map the number of incidents to the bubble if first time we look at bubble end.
                 int num_incidents = graph_in.fixed_point_numbers.at(s.second);
@@ -146,13 +157,30 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
 
     // Finally, a linear traversal to generate and wire the non-variant bits.
     seqBuffer = "";
-    backWire = nullptr;
+    // Initialisation: make the root node sequence if it does not exist, or skip past it if it is a bubble start.
     cur_Node = graph_in.root;
-    cur_pos = cur_Node->pos;
+    assert(cur_Node->sequence == SOURCE_CHAR);
+    if (cur_Node->next.size() > 1){
+        auto& translated_bubble = entry_translation_map.at(cur_Node); // Will throw error if not there; it ought to be.
+        backWire = bubble_map.at(translated_bubble);
+        cur_Node = t_b_m.at(cur_Node);
+        cur_pos = cur_Node->pos + 1;
+        root = translated_bubble;
+    }
+    else {
+        cur_pos = cur_Node->pos;
+        auto new_Node = std::make_shared<coverage_Node>(SOURCE_CHAR, cur_pos, 0, 0);
+        backWire = new_Node;
+        cur_Node = *(cur_Node->next.begin());
+        root = new_Node;
+    }
 
     while(cur_Node->sequence != SINK_CHAR){
        if (cur_Node->next.size() == 1) {
-           seqBuffer += cur_Node->sequence;
+           // Only commit the sequence if we are not in a bubble end.
+           if (exit_translation_map.find(cur_Node) == exit_translation_map.end()){
+               seqBuffer += cur_Node->sequence;
+           }
            cur_Node = *(cur_Node->next.begin());
            if (cur_Node->sequence != SINK_CHAR) continue;
        }
@@ -160,25 +188,28 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
        if (seqBuffer.size() > 0){
           auto new_Node = std::make_shared<coverage_Node>(seqBuffer, cur_pos, 0, 0);
           seqBuffer = "";
-          if (backWire != nullptr) {
-              new_Node->prev.insert(backWire);
-              backWire->next.insert(new_Node);
-          }
-          else root = new_Node; // The very first node created becomes the root
+          new_Node->prev.insert(backWire);
+          backWire->next.insert(new_Node);
            backWire = new_Node;
           }
 
        // Case: we have a bubble
        if (cur_Node->sequence != SINK_CHAR){
            auto& translated_bubble = entry_translation_map.at(cur_Node); // Will throw error if not there; it ought to be.
-           if (backWire == nullptr) root = translated_bubble;
+           // The backWire will be the same as the bubble entry if there is a
+           // node which is both a bubble end and a bubble start. In that case, no link needed.
+           if (backWire != translated_bubble){
+               translated_bubble->prev.insert(backWire);
+               backWire->next.insert(translated_bubble);
+           }
            backWire = bubble_map.at(translated_bubble);
            cur_Node = t_b_m.at(cur_Node);
            cur_pos = cur_Node->pos + 1;
        }
        }
+        assert(cur_Node->sequence == SINK_CHAR);
         if (backWire->sequence != SINK_CHAR){ // The sink is not a bubble end, it does not exist yet.
-            auto new_Node = std::make_shared<coverage_Node>(SINK_CHAR, cur_pos, 0, 0);
+            auto new_Node = std::make_shared<coverage_Node>(SINK_CHAR, cur_Node->pos, 0, 0);
             new_Node->prev.insert(backWire);
             backWire->next.insert(new_Node);
         }

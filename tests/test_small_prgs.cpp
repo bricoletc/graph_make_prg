@@ -7,13 +7,15 @@
  * Testing a series here, of related but slightly different NFAs
  */
 TEST(MSA, deletion_spanning_snpAndIndel) {
+    std::pair<std::string, std::string> res;
     std::string MSA_string = ">Rec1\n"
                              "ACGTTA\n"
                              ">Rec2\n"
                              "ACC-TA\n"
                              ">Rec3\n"
                              "A----A\n";
-    make_and_print_prg_string(MSA_string, false);
+    res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
 
     // A single difference in Rec 3 which turns out to be important for ability to make correct PRG strings
     std::string MSA_string2 = ">Rec1\n"
@@ -22,7 +24,8 @@ TEST(MSA, deletion_spanning_snpAndIndel) {
                               "ACC-TA\n"
                               ">Rec3\n"
                               "A---TA\n";
-    make_and_print_prg_string(MSA_string2, false);
+    res = make_and_print_prg_string(MSA_string2, false);
+    EXPECT_EQ(res.first, res.second);
 
 
     std::string MSA_string3 = ">Rec1\n"
@@ -36,9 +39,10 @@ TEST(MSA, deletion_spanning_snpAndIndel) {
                               ">Rec5\n"
                               "ACGTTG\n";
 
-    auto p3 = make_and_print_prg_string(MSA_string3, false);
+    res = make_and_print_prg_string(MSA_string3, false);
+    EXPECT_EQ(res.first, res.second);
     std::string expected = "A[A,C[C,GT]T[A,G]]";
-    //EXPECT_EQ(expected, p3);
+    EXPECT_EQ(expected, res.second);
 
 }
 
@@ -50,11 +54,11 @@ TEST(MSA, adjacent_snp_and_del) {
                              ">Rec3\n"
                              "A-CT\n";
 
-    auto p3 = make_and_print_prg_string(MSA_string, false);
+    auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
 }
 
 TEST(MSA, level3Nesting_allEndAtFinalNode) {
-
     std::string MSA_string = ">R1\n"
                              "ACCAT\n"
                              ">R2\n"
@@ -63,7 +67,8 @@ TEST(MSA, level3Nesting_allEndAtFinalNode) {
                              "AT--T\n"
                              ">R4\n"
                              "ACCTT\n";
-    auto p = make_and_print_prg_string(MSA_string, false);
+    auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
     std::string expected = "A[CCA,CCT,CG,T]T";
     //EXPECT_EQ(expected,p);
 }
@@ -86,7 +91,8 @@ TEST(MSA, twoSegregatingClasses) {
                              "TTATTTTTT\n"
                              ">R6\n"
                              "TTTTTATTT\n";
-    auto p = make_and_print_prg_string(MSA_string, false);
+    auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
 }
 
 /**
@@ -99,7 +105,8 @@ TEST(MSA, leakyBubble) {
                              "AGCTAT\n"
                              ">R3\n"
                              "AG---T\n";
-    auto p = make_and_print_prg_string(MSA_string, false);
+    auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
 }
 
 /**
@@ -120,7 +127,8 @@ TEST(MSA, expanded_IndelGraph) {
                              "AAAAA--G\n"
                              ">R7\n"
                              "AAAAAA-G\n";
-    auto p = make_and_print_prg_string(MSA_string, false);
+    auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
 }
 
 /**
@@ -134,7 +142,8 @@ TEST(MSA, SNP_rewriting) {
                              "G-CTA\n"
                              ">R3\n"
                              "G--CA\n";
-    auto p = make_and_print_prg_string(MSA_string, false);
+    auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
 }
 
 /**
@@ -146,7 +155,8 @@ TEST(MSA, successiveDeletions) {
                              "CGAACAAAG\n"
                              ">R2\n"
                              "CG--C--AG\n";
-    auto p = make_and_print_prg_string(MSA_string, false);
+    auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
  }
 
  /**
@@ -163,5 +173,6 @@ TEST(MSA, deletion_spanning_SNPs) {
                              "CGAACCAAG\n"
                              ">R5\n"
                              "C-------G\n";
-    auto p = make_and_print_prg_string(MSA_string, false);
+    auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
 }
