@@ -7,7 +7,15 @@ public:
     coverage_Node(auto_Node const& node_in, int const site_ID, int const allele_ID);
     bool in_site() {return is_in_site;};
 
+    /**
+     * Compare pointers to `coverage_Node`; used in topological ordering (lastmost sequence position first)
+     * Equivalence in a set is defined using this, so we also test whether the pointers are the same objects.
+     */
+    friend bool operator > (const std::shared_ptr<coverage_Node>& lhs, const std::shared_ptr<coverage_Node>& rhs);
+
     friend class coverage_Graph;
+    template<typename graph_T, typename node_T> friend class stringified_PRG;
+
 private:
     std::string sequence;
     int site_ID;
@@ -29,6 +37,9 @@ private:
 **/
 class coverage_Graph{
 public:
+
+    std::shared_ptr<coverage_Node> root;
+
     /**
      * Build a coverage graph from an existing sequence graph.
      */
@@ -39,4 +50,9 @@ public:
      */
     std::map<std::shared_ptr<coverage_Node>,std::shared_ptr<coverage_Node>,
             std::greater<std::shared_ptr<coverage_Node>> > bubble_map;
+
+    /** Maps a bubble end to the number of bubbles that end there.
+     */
+     std::unordered_map<std::shared_ptr<coverage_Node>, int> fixed_point_numbers;
+
 };

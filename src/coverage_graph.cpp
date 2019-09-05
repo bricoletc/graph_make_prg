@@ -16,27 +16,38 @@ coverage_Node::coverage_Node(auto_Node const& node_in, int const site_ID, int co
     coverage = std::vector<uint64_t>{sequence.length(), 0};
 }
 
+bool operator>(const std::shared_ptr<coverage_Node> &lhs, const std::shared_ptr<coverage_Node> &rhs) {
+    if (lhs->pos == rhs->pos) {
+        return lhs.get() > rhs.get();
+    } else return lhs->pos > rhs->pos;
+}
 
 coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
     // Throughout, we must distinguish between nodes in the constructor parameter's graph,
     // and nodes in the new graph.
 
-    // maps the coverage graph bubble equivalent.
-    std::unordered_map<std::shared_ptr<auto_Node>, std::shared_ptr<coverage_Node> > bubble_translation_map;
-    auto& t_b_m = graph_in.bubble_map; // Template bubble map
+    // maps the coverage graph bubble start equivalent.
+    std::unordered_map<std::shared_ptr<auto_Node>, std::shared_ptr<coverage_Node> > entry_translation_map;
+    // maps the coverage graph bubble end equivalent.
+    std::unordered_map<std::shared_ptr<auto_Node>, std::shared_ptr<coverage_Node> > exit_translation_map;
+
     std::shared_ptr<coverage_Node> backWire; // Points to latest previous node
     int cur_pos; std::string seqBuffer{""}; // For giving new nodes sequence
     std::shared_ptr<auto_Node> cur_Node; // For traversing the in graph.
     int site_ID = 0;
     int allele_ID;
-    std::set<std::shared_ptr<coverage_Node>> known_fixed_points;
 
-    // Bubbles are processed children first, so when we encounter them they should be mapped already.
+    auto& t_b_m = graph_in.bubble_map; // constructor parameter's bubble map
+
+    // We will copy each bubble in dependency order: child bubbles first (that is how they are ordered in the map)
     for (auto& s : graph_in.bubble_map){
         allele_ID = 0;
         site_ID++;
+
+        // Entry and exit bubble copies.
         auto bubble_entry = std::make_shared<coverage_Node>(*s.first, site_ID, allele_ID);
-        auto bubble_exit = std::make_shared<coverage_Node>(*s.second, site_ID, allele_ID);
+        std::shared_ptr<coverage_Node> bubble_exit; // This one is not initialised, as it can have been made already.
+
         cur_pos = s.first->pos + 1;
         bool skip_fixed_point{false};
         bool deletion_bubble{false};
@@ -80,10 +91,12 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
                if (cur_Node->prev.size() >= 1 && cur_Node->next.size() == 1){
                    seqBuffer += cur_Node->sequence;
                    cur_Node = *(cur_Node->next.begin());
-                   // If we have reached the bubble end, we need not to skip processing the sequence buffer.
+                   // If we have reached the bubble end, we need to not skip processing the sequence buffer.
                    if (cur_Node != s.second) continue;
                }
 
+               // By implication here, we are at the end point, or at a bubble start.
+               // Process the sequence buffer: empty its contents into a new node.
                if (seqBuffer.size() > 0){
                    auto new_Node = std::make_shared<coverage_Node>(seqBuffer, cur_pos, site_ID, allele_ID);
                    new_Node->prev.insert(backWire);
@@ -93,32 +106,42 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
                }
 
                if (t_b_m.find(cur_Node) != t_b_m.end() && cur_Node != s.second){
-                   auto& translated_bubble = bubble_translation_map.at(cur_Node);
+                   auto& translated_bubble = entry_translation_map.at(cur_Node);
                    translated_bubble->prev.insert(backWire);
                    backWire->next.insert(translated_bubble);
                    backWire = bubble_map.at(translated_bubble);
                    cur_Node = t_b_m.at(cur_Node);
                    cur_pos = cur_Node->pos + 1;
-                   // We may end at the same place as a previously processed bubble.
-                   if (!skip_fixed_point && cur_Node == s.second &&
-                        known_fixed_points.find(backWire) != known_fixed_points.end()){
-                       skip_fixed_point = true;
-                       bubble_exit = backWire;
-                   }
                    continue;
                }
 
-               // We ought to be at the bubble end point here.
+               // We must be at the bubble end point here.
                assert(cur_Node == s.second);
            }
-           if (backWire != bubble_exit){
-               backWire->next.insert(bubble_exit);
+
+
+           // We might end in a bubble that we have ended in before.
+           // If we do, reuse it!
+            if (exit_translation_map.find(s.second) != exit_translation_map.end()){
+                bubble_exit = exit_translation_map.at(s.second);
+            }
+            else { // Never seen it before: make it
+                bubble_exit = std::make_shared<coverage_Node>(*s.second, 0, 0);
+                exit_translation_map.insert({s.second, bubble_exit});
+                // Map the number of incidents to the bubble if first time we look at bubble end.
+                int num_incidents = graph_in.fixed_point_numbers.at(s.second);
+                fixed_point_numbers.insert(std::make_pair(bubble_exit, num_incidents));
+            }
+
+            // The backWire can be bubble_exit if the allele path ends by going through a bubble ending at bubble exit.
+            // If that's the case, we want to avoid self linking.
+            if (backWire != bubble_exit){
+                backWire->next.insert(bubble_exit);
                bubble_exit->prev.insert(backWire);
            }
         }
-        bubble_translation_map.insert(std::make_pair(s.first, bubble_entry));
+        entry_translation_map.insert(std::make_pair(s.first, bubble_entry));
         bubble_map.insert(std::make_pair(bubble_entry,bubble_exit));
-        known_fixed_points.insert(bubble_exit);
     };
 
     // Finally, a linear traversal to generate and wire the non-variant bits.
@@ -141,12 +164,14 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
               new_Node->prev.insert(backWire);
               backWire->next.insert(new_Node);
           }
+          else root = new_Node; // The very first node created becomes the root
            backWire = new_Node;
           }
 
        // Case: we have a bubble
        if (cur_Node->sequence != SINK_CHAR){
-           auto& translated_bubble = bubble_translation_map.at(cur_Node); // Will throw error if not there; it ought to be.
+           auto& translated_bubble = entry_translation_map.at(cur_Node); // Will throw error if not there; it ought to be.
+           if (backWire == nullptr) root = translated_bubble;
            backWire = bubble_map.at(translated_bubble);
            cur_Node = t_b_m.at(cur_Node);
            cur_pos = cur_Node->pos + 1;

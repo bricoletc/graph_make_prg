@@ -18,12 +18,14 @@ template<typename graph_T, typename node_T>
 stringified_PRG<graph_T, node_T>::stringified_PRG(graph_T& graph_in){
     bubble_map = graph_in.bubble_map;
     fixed_point_numbers = graph_in.fixed_point_numbers;
+    int site_ID = 5;
 
     // Parse the bubbles, in dependency order
     for (auto& pair : bubble_map){
         auto start_point = pair.first;
         auto end_point = pair.second;
-        parse_bubble(start_point, end_point, 0);
+        parse_bubble(start_point, end_point, site_ID);
+        site_ID +=2;
     }
 
     // Linear advance to build final prg sequence
@@ -87,8 +89,10 @@ void stringified_PRG<graph_T,node_T>::parse_bubble(std::shared_ptr<node_T> start
         std::vector<uint64_t> prg_Seq;
 
         // Prepend the common string pre bifurcation.
-        if (start_point->sequence != SOURCE_CHAR && !direct_deletion)
-            prg_Seq.insert(prg_Seq.end(),start_point->sequence.begin(), start_point->sequence.end());
+        if (start_point->sequence != SOURCE_CHAR && !direct_deletion){
+            auto new_seq = prg_string_to_ints(start_point->sequence);
+            prg_Seq.insert(prg_Seq.end(),new_seq.begin(), new_seq.end());
+        }
 
         // Site entry marker
         prg_Seq.emplace_back(site_ID);
@@ -98,7 +102,10 @@ void stringified_PRG<graph_T,node_T>::parse_bubble(std::shared_ptr<node_T> start
         // Add the alleles
         for (auto s : alts){
             // Prepend the common string to each allele if direct deletion
-            if (direct_deletion) s.insert(s.begin(),start_point->sequence.begin(), start_point->sequence.end());
+            if (direct_deletion){
+                auto new_seq = prg_string_to_ints(start_point->sequence);
+                s.insert(s.begin(),new_seq.begin(), new_seq.end());
+            }
             prg_Seq.insert(prg_Seq.end(),s.begin(), s.end());
             prg_Seq.emplace_back(site_ID + 1);
         }
@@ -106,10 +113,11 @@ void stringified_PRG<graph_T,node_T>::parse_bubble(std::shared_ptr<node_T> start
         // Postpend the common sequence post joining
         // It is OK to postpend at the last incident bubble, because the bubbles are ordered topologically (innermost first)
         if (num_bubbles_to_process == 0 && bubble_map.find(end_point) == bubble_map.end() && end_point->sequence != SINK_CHAR){
-            prg_Seq.insert(prg_Seq.end(), end_point->sequence.begin(), end_point->sequence.end());
+            auto new_seq = prg_string_to_ints(end_point->sequence);
+            prg_Seq.insert(prg_Seq.end(), new_seq.begin(), new_seq.end());
         }
 
-        BOOST_LOG_TRIVIAL(debug) << prg_Seq ;
+        // BOOST_LOG_TRIVIAL(debug) << prg_Seq ;
 
         // Make a prg node, and make it available.
         prg_Node<node_T>* new_Node = new prg_Node<node_T>(prg_Seq, end_point);
@@ -128,53 +136,6 @@ std::vector<uint64_t> prg_string_to_ints(std::string const& string_prg){
             exit(1);
         }
     }
-}
-
-std::vector<uint64_t> full_prg_string_to_ints(std::string const& string_prg) {
-    std::stack<int> marker_stack;
-    int max_var_marker{3};
-    int char_count{0};
-
-    std::vector<uint64_t> encoded_prg(string_prg.size());
-    BOOST_LOG_TRIVIAL(debug) << "Prg pre serialisation: " << string_prg;
-    for (int i = 0; i<string_prg.size(); ++i){
-        const auto &c = string_prg[i];
-
-        switch(c) {
-            case '[' : {
-                max_var_marker += 2;
-                marker_stack.push(max_var_marker);
-                encoded_prg[char_count++] = max_var_marker;
-                break;
-            }
-
-            case ']' : {
-                assert(!marker_stack.empty());
-                encoded_prg[char_count++] = marker_stack.top() + 1;
-                marker_stack.pop();
-                break;
-            }
-
-            case ',' : {
-                assert(!marker_stack.empty());
-                encoded_prg[char_count++] = marker_stack.top() + 1;
-                break;
-            }
-
-            default : {
-                try {
-                    encoded_prg[char_count++] = encode_char(c);
-                    break;
-                }
-                catch(std::exception& e){
-                    BOOST_LOG_TRIVIAL(error) << e.what();
-                    exit(1);
-                }
-            }
-        }
-    }
-
-    BOOST_LOG_TRIVIAL(info) << "Number of sites produced: " << (max_var_marker -3 ) / 2;
     return encoded_prg;
 }
 

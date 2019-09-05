@@ -21,4 +21,6 @@ void init_logging(const std::string& log_level = "");
  */
 int encode_char(const char &c);
 
+std::string to_readable_string(std::vector<uint64_t> const& prg);
+
 #endif

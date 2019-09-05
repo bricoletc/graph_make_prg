@@ -24,7 +24,7 @@ private:
 
     // A local reference to the in graph's structure
     std::map<std::shared_ptr<node_T>, std::shared_ptr<node_T>,
-    std::greater<std::shared_ptr<auto_Node> > > bubble_map;
+    std::greater<std::shared_ptr<node_T> > > bubble_map;
 
     // A local reference to the in graph's structure
     std::unordered_map<std::shared_ptr<node_T>, int> fixed_point_numbers;
