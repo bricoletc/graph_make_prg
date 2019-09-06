@@ -1,7 +1,17 @@
+/**
+ * @file Builds PRG graphs from MSAs: a sequence graph and a coverage graph from the sequence graph.
+ * Stringifies both and tests for string equality.
+ */
 #include "common.hpp"
 #include <assert.h>
 #include "gtest/gtest.h"
 
+
+/**
+ * -----------------------
+ * Small, in-string PRGs
+ * -----------------------
+ */
 
 /*
  * Testing a series here, of related but slightly different NFAs
@@ -174,5 +184,22 @@ TEST(MSA, deletion_spanning_SNPs) {
                              ">R5\n"
                              "C-------G\n";
     auto res = make_and_print_prg_string(MSA_string, false);
+    EXPECT_EQ(res.first, res.second);
+}
+
+/**
+ * -----------------------
+ * Large, in-file PRGs
+ * -----------------------
+ */
+
+/**
+ * The AMA1 gene of P falciparum
+ */
+TEST(MSA, Plasmodium_TwoRecords){
+    //auto data_path = filesystem::path(__FILE__);
+    //std::string MSA_fpath = "/home/brice/Desktop/git_repos/prg_string_construction/prg_msa/tests/test_data/AMA_Plasmodium_cycle.fasta";
+    std::string MSA_fpath = "/home/brice/Desktop/git_repos/prg_string_construction/prg_msa/tests/test_data/AMA_Plasmodium.fasta";
+    auto res = make_and_print_prg_string(MSA_fpath);
     EXPECT_EQ(res.first, res.second);
 }
