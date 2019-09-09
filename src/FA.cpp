@@ -15,13 +15,13 @@ auto_Node::auto_Node(std::string l, int pos)
         pos(pos) {
 }
 
-bool operator>(const std::shared_ptr<auto_Node> &lhs, const std::shared_ptr<auto_Node> &rhs) {
+bool operator>(const seqG_ptr &lhs, const seqG_ptr &rhs) {
     if (lhs->pos == rhs->pos) {
         return lhs.get() > rhs.get();
     } else return lhs->pos > rhs->pos;
 }
 
-std::ostream& operator <<(std::ostream& stream, const std::shared_ptr<auto_Node>& node){
+std::ostream& operator <<(std::ostream& stream, const seqG_ptr& node){
     stream << "\n" << "Auto Node: sequence " << node->sequence << ", position " << node->pos << "\n";
     return stream;
 }
@@ -32,7 +32,7 @@ FA::FA(MSA &msa) {
     root = std::make_shared<auto_Node>(SOURCE_CHAR, pos);
     int N = msa.num_records;
 
-    std::shared_ptr<auto_Node> cur_Nodes[N];
+    seqG_ptr cur_Nodes[N];
 
     // Initialise to point to root.
     for (int i = 0; i < N; i++) {
@@ -41,7 +41,7 @@ FA::FA(MSA &msa) {
 
     std::vector<char> letters;
 
-    std::unordered_map<char, std::shared_ptr<auto_Node>> new_Nodes;
+    std::unordered_map<char, seqG_ptr> new_Nodes;
 
     std::set<char> letters_in_column;
 
@@ -98,8 +98,8 @@ FA::FA(MSA &msa) {
 
 }
 
-FA::FA(MSA &msa, std::shared_ptr<auto_Node> start_point,
-       std::shared_ptr<auto_Node> end_point, int haplotypic_resolution) {
+FA::FA(MSA &msa, seqG_ptr start_point,
+       seqG_ptr end_point, int haplotypic_resolution) {
     /**
      * Initialisation
      */
@@ -123,7 +123,7 @@ FA::FA(MSA &msa, std::shared_ptr<auto_Node> start_point,
     int pos = start_point->pos + 1; // Now, we want to start by getting the first column after the start point.
     msa.reposition(pos); //pos is the next position fetched by call to `next_column()`
 
-    std::shared_ptr<auto_Node> cur_Nodes[N];
+    seqG_ptr cur_Nodes[N];
     int prev_positions[N];
 
     // Initialise to point to start point.
@@ -137,7 +137,7 @@ FA::FA(MSA &msa, std::shared_ptr<auto_Node> start_point,
         buffer[i] = "";
     }
 
-    std::unordered_map<std::string, std::shared_ptr<auto_Node>> new_Nodes;
+    std::unordered_map<std::string, seqG_ptr> new_Nodes;
 
     /**
      * Iteration: build nodes & edges
@@ -197,7 +197,7 @@ FA::FA(MSA &msa, std::shared_ptr<auto_Node> start_point,
     }
 
     // End condition: link to the end_point
-    std::set<std::shared_ptr<auto_Node>> final_Nodes;
+    std::set<seqG_ptr> final_Nodes;
     for (int i = 0; i < N; i++) {
         auto cn = cur_Nodes[i];
         if (buffer[i].length() == 0) {

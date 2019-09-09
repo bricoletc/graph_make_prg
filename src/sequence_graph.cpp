@@ -7,7 +7,7 @@ bool operator < (const incidence_fixed_point& lhs, const incidence_fixed_point& 
     return lhs.pos_earliest_incident < rhs.pos_earliest_incident;
 }
 
-sequence_Graph::sequence_Graph(std::shared_ptr<auto_Node> root, std::string MSA_file,
+sequence_Graph::sequence_Graph(seqG_ptr root, std::string MSA_file,
                                bool is_file, int max_num_incidents)
     :
     max_num_incidents(max_num_incidents),
@@ -21,7 +21,7 @@ sequence_Graph::sequence_Graph(std::shared_ptr<auto_Node> root, std::string MSA_
 }
 
 
-void sequence_Graph::map_all_bubbles(std::shared_ptr<auto_Node> root){
+void sequence_Graph::map_all_bubbles(seqG_ptr root){
     auto cur_Node = root;
     int haplotype_res = 1;
     while (cur_Node->sequence != SINK_CHAR){
@@ -34,14 +34,14 @@ void sequence_Graph::map_all_bubbles(std::shared_ptr<auto_Node> root){
 }
 
 
-std::shared_ptr<auto_Node> sequence_Graph::map_bubbles(std::shared_ptr<auto_Node> start_point, int haplotype_res) {
+seqG_ptr sequence_Graph::map_bubbles(seqG_ptr start_point, int haplotype_res) {
 
     bool site_convergence{false};
-    std::set<std::shared_ptr<auto_Node> > seen_bubbles;
+    std::set<seqG_ptr > seen_bubbles;
 
-    auto cmp = [](std::shared_ptr<auto_Node> p1, std::shared_ptr<auto_Node> p2) { return p1->pos > p2->pos; };
-    std::priority_queue<std::shared_ptr<auto_Node> , std::vector<std::shared_ptr<auto_Node> >, decltype(cmp)> q(cmp);
-    std::set<std::shared_ptr<auto_Node> > to_visit;
+    auto cmp = [](seqG_ptr p1, seqG_ptr p2) { return p1->pos > p2->pos; };
+    std::priority_queue<seqG_ptr , std::vector<seqG_ptr >, decltype(cmp)> q(cmp);
+    std::set<seqG_ptr > to_visit;
 
 
     for (auto nn : start_point->next) {
@@ -49,7 +49,7 @@ std::shared_ptr<auto_Node> sequence_Graph::map_bubbles(std::shared_ptr<auto_Node
         to_visit.insert(nn);
     }
 
-    std::shared_ptr<auto_Node> cur_Node;
+    seqG_ptr cur_Node;
 
     while (q.size() > 1) {
 
@@ -68,7 +68,7 @@ std::shared_ptr<auto_Node> sequence_Graph::map_bubbles(std::shared_ptr<auto_Node
             else seen_bubbles.insert(s);
         }
 
-        std::shared_ptr<auto_Node> nn;
+        seqG_ptr nn;
         auto num_descendents = cur_Node->next.size();
         if (num_descendents > 1) {
             // Avoid re-doing the work if we have mapped the bubble already
@@ -153,9 +153,9 @@ void sequence_Graph::haplotype_expand_bubbles(){
     }
 };
 
-void sequence_Graph::delete_in_between(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point){
-   std::stack<std::shared_ptr<auto_Node>> to_visit;
-   std::set<std::shared_ptr<auto_Node>> visited;
+void sequence_Graph::delete_in_between(seqG_ptr start_point, seqG_ptr end_point){
+   std::stack<seqG_ptr> to_visit;
+   std::set<seqG_ptr> visited;
    for (auto& visitable : start_point->next){
        if (visitable != end_point) to_visit.push(visitable);
    }

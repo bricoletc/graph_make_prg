@@ -1,6 +1,8 @@
 #include "sequence_graph.hpp"
 
+
 class coverage_Node{
+    using covG_ptr = std::shared_ptr<coverage_Node>;
 public:
     coverage_Node(){;};
     coverage_Node(const std::string seq, int const pos, int const site_ID = 0, int const allele_ID = 0);
@@ -11,7 +13,7 @@ public:
      * Compare pointers to `coverage_Node`; used in topological ordering (lastmost sequence position first)
      * Equivalence in a set is defined using this, so we also test whether the pointers are the same objects.
      */
-    friend bool operator > (const std::shared_ptr<coverage_Node>& lhs, const std::shared_ptr<coverage_Node>& rhs);
+    friend bool operator > (const covG_ptr& lhs, const covG_ptr& rhs);
 
     friend class coverage_Graph;
     template<typename graph_T, typename node_T> friend class stringified_PRG;
@@ -23,9 +25,11 @@ private:
     int pos;
     std::vector<uint64_t> coverage;
     bool is_in_site;
-    std::set<std::shared_ptr<coverage_Node>> prev;
-    std::set<std::shared_ptr<coverage_Node>> next;
+    std::set<covG_ptr> prev;
+    std::set<covG_ptr> next;
 };
+
+using covG_ptr = std::shared_ptr<coverage_Node>;
 
 /**
 * This class allows to create a copy of a sequence graph. This modified copy is ready to record coverage
@@ -38,7 +42,7 @@ private:
 class coverage_Graph{
 public:
 
-    std::shared_ptr<coverage_Node> root;
+    covG_ptr root;
 
     /**
      * Build a coverage graph from an existing sequence graph.
@@ -48,11 +52,10 @@ public:
     /** Maps the start of a local bubble, to its end.
      * Children nodes appear before parent nodes.
      */
-    std::map<std::shared_ptr<coverage_Node>,std::shared_ptr<coverage_Node>,
-            std::greater<std::shared_ptr<coverage_Node>> > bubble_map;
+    std::map<covG_ptr,covG_ptr, std::greater<covG_ptr> > bubble_map;
 
     /** Maps a bubble end to the number of bubbles that end there.
      */
-     std::unordered_map<std::shared_ptr<coverage_Node>, int> fixed_point_numbers;
+     std::unordered_map<covG_ptr, int> fixed_point_numbers;
 
 };

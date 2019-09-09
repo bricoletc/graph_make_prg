@@ -7,11 +7,12 @@
 #ifndef HPP_NESTED_PRG
 #define HPP_NESTED_PRG
 
+
 struct incidence_fixed_point{
-    std::shared_ptr<auto_Node> fixed_point;
+    seqG_ptr fixed_point;
     int num_incidents;
     int haplotype_resolution;
-    std::shared_ptr<auto_Node> earliest_incident;
+    seqG_ptr earliest_incident;
     int pos_earliest_incident;
 
     /**
@@ -23,7 +24,7 @@ struct incidence_fixed_point{
 
 class sequence_Graph{
 public:
-    sequence_Graph(std::shared_ptr<auto_Node> root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 2);
+    sequence_Graph(seqG_ptr root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 2);
 
     friend class coverage_Graph;
     template<typename graph_T, typename node_T> friend class stringified_PRG;
@@ -32,7 +33,7 @@ private:
     /**
      * Data structures
      */
-     std::shared_ptr<auto_Node> root;
+     seqG_ptr root;
 
     // User definable parameter controlling how much recombination we want to allow between haplotypes.
     int max_num_incidents;
@@ -44,21 +45,21 @@ private:
     /** Maps the start of a local bubble, to its end.
      * Children nodes appear before parent nodes.
      * */
-    std::map<std::shared_ptr<auto_Node>,std::shared_ptr<auto_Node>,
-        std::greater<std::shared_ptr<auto_Node>> > bubble_map;
+    std::map<seqG_ptr,seqG_ptr,
+        std::greater<seqG_ptr> > bubble_map;
 
 
 
     /** Maps the end of a local bubble to the number of bubbles ending in it left to process. When that number is 0,
      * the corresponding character can be committed to the prg string.*/
-    std::unordered_map<std::shared_ptr<auto_Node>,int> fixed_point_numbers;
+    std::unordered_map<seqG_ptr,int> fixed_point_numbers;
 
     /**
      * Maps the end of a local bubble to a struct containing:
      *  - The earliest (positionally) bubble that end into it.
      *  - The number of bubbles that end into it.
      */
-    std::unordered_map<std::shared_ptr<auto_Node>,incidence_fixed_point> fixed_point_incidence_map;
+    std::unordered_map<seqG_ptr,incidence_fixed_point> fixed_point_incidence_map;
 
     std::set<incidence_fixed_point,
         std::less<incidence_fixed_point>> large_incidence_fixed_points;
@@ -72,12 +73,12 @@ private:
      * Traverses full NFA graph and maps all bubbles.
      * @see map_bubbles()
      */
-    void map_all_bubbles(std::shared_ptr<auto_Node> root);
+    void map_all_bubbles(seqG_ptr root);
 
     /**
      * Finds the first `auto_Node` at which all paths going from `start_point` end.
      */
-    std::shared_ptr<auto_Node> map_bubbles(std::shared_ptr<auto_Node> start_point, int haplotype_res);
+    seqG_ptr map_bubbles(seqG_ptr start_point, int haplotype_res);
 
     /**
      * Rewrite portions of the graph with decreasing levels of recombination.
@@ -88,7 +89,7 @@ private:
      * Free the heap allocated nodes in between (and not including) the two specified pointers
      * Specify the graph source and sink nodes to free the whole graph.
      */
-    void delete_in_between(std::shared_ptr<auto_Node> start_point, std::shared_ptr<auto_Node> end_point);
+    void delete_in_between(seqG_ptr start_point, seqG_ptr end_point);
 
     int rebuild_in_between(MSA& msa, incidence_fixed_point& i);
 

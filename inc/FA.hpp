@@ -11,6 +11,7 @@
 #define SINK_CHAR "$"
 
 class auto_Node {
+    using seqG_ptr = std::shared_ptr<auto_Node>;
 public:
     auto_Node();
     ~auto_Node(){
@@ -25,9 +26,9 @@ public:
      * Compare pointers to `auto_Node`; used in topological ordering (lastmost sequence position first)
      * Equivalence in a set is defined using this, so we also test whether the pointers are the same objects.
      */
-    friend bool operator > (const std::shared_ptr<auto_Node>& lhs, const std::shared_ptr<auto_Node>& rhs);
+    friend bool operator > (const seqG_ptr& lhs, const seqG_ptr& rhs);
 
-    friend std::ostream& operator <<(std::ostream& stream, const std::shared_ptr<auto_Node>& node);
+    friend std::ostream& operator <<(std::ostream& stream, const seqG_ptr& node);
 
     friend class FA;
     friend class oneDepth_prg;
@@ -39,12 +40,14 @@ public:
 
 private:
     std::string sequence;
-    std::set<std::shared_ptr<auto_Node>> next; // Outgoing edges
-    std::set<std::shared_ptr<auto_Node>> prev; // Incoming edges
+    std::set<seqG_ptr> next; // Outgoing edges
+    std::set<seqG_ptr> prev; // Incoming edges
     bool fixed_Point;
     int pos; // Alignment column number.
 
 };
+
+using seqG_ptr = std::shared_ptr<auto_Node>;
 
 class FA{
 public:
@@ -57,12 +60,12 @@ public:
      * Build it from delimited boundaries
      * @param haplotypic_resolution the target sequence size of each node.
      */
-    FA(MSA& msa, std::shared_ptr<auto_Node> start_point,
-            std::shared_ptr<auto_Node> end_point, int haplotypic_resolution);
-    std::shared_ptr<auto_Node> root;
-    std::shared_ptr<auto_Node> getSink() const {return sink;};
+    FA(MSA& msa, seqG_ptr start_point,
+            seqG_ptr end_point, int haplotypic_resolution);
+    seqG_ptr root;
+    seqG_ptr getSink() const {return sink;};
 private:
-    std::shared_ptr<auto_Node> sink;
+    seqG_ptr sink;
     const std::set<char> gapping_chars = {'-', '.'};
 };
 

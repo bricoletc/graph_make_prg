@@ -16,7 +16,7 @@ coverage_Node::coverage_Node(auto_Node const& node_in, int const site_ID, int co
     coverage = std::vector<uint64_t>{sequence.length(), 0};
 }
 
-bool operator>(const std::shared_ptr<coverage_Node> &lhs, const std::shared_ptr<coverage_Node> &rhs) {
+bool operator>(const covG_ptr &lhs, const covG_ptr &rhs) {
     if (lhs->pos == rhs->pos) {
         return lhs.get() > rhs.get();
     } else return lhs->pos > rhs->pos;
@@ -27,13 +27,13 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
     // and nodes in the new graph.
 
     // maps the coverage graph bubble start equivalent.
-    std::unordered_map<std::shared_ptr<auto_Node>, std::shared_ptr<coverage_Node> > entry_translation_map;
+    std::unordered_map<seqG_ptr, covG_ptr > entry_translation_map;
     // maps the coverage graph bubble end equivalent.
-    std::unordered_map<std::shared_ptr<auto_Node>, std::shared_ptr<coverage_Node> > exit_translation_map;
+    std::unordered_map<seqG_ptr, covG_ptr > exit_translation_map;
 
-    std::shared_ptr<coverage_Node> backWire; // Points to latest previous node
+    covG_ptr backWire; // Points to latest previous node
     int cur_pos; std::string seqBuffer{""}; // For giving new nodes sequence
-    std::shared_ptr<auto_Node> cur_Node; // For traversing the in graph.
+    seqG_ptr cur_Node; // For traversing the input graph.
     int site_ID = 0;
     int allele_ID;
 
@@ -46,7 +46,7 @@ coverage_Graph::coverage_Graph(sequence_Graph const& graph_in){
 
         // Entry and exit bubble copies.
         auto bubble_entry = std::make_shared<coverage_Node>(*s.first, site_ID, allele_ID);
-        std::shared_ptr<coverage_Node> bubble_exit; // This one is not initialised, as it can have been made already.
+        covG_ptr bubble_exit; // This one is not initialised, as it can have been made already.
 
         cur_pos = s.first->pos + 1;
         bool skip_fixed_point{false};
