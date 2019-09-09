@@ -27,6 +27,7 @@ public:
     sequence_Graph(seqG_ptr root, std::string MSA_file = "", bool is_file = true, int max_num_incidents = 2);
 
     friend class coverage_Graph;
+    friend class cov_graph_Constructor;
     template<typename graph_T, typename node_T> friend class stringified_PRG;
 
 private:

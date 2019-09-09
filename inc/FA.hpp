@@ -34,7 +34,7 @@ public:
     friend class oneDepth_prg;
     friend class sequence_Graph;
     friend class coverage_Node;
-    friend class coverage_Graph;
+    friend class cov_graph_Constructor;
     template<typename graph_T, typename node_T> friend class stringified_PRG;
 
 
