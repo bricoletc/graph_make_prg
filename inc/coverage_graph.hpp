@@ -26,16 +26,15 @@ private:
     int pos;
     std::vector<uint64_t> coverage;
     bool is_in_site;
-    std::set<covG_ptr> prev;
-    std::set<covG_ptr> next;
+    std::vector<covG_ptr> prev;
+    std::vector<covG_ptr> next;
 };
 
 using covG_ptr = std::shared_ptr<coverage_Node>;
 using seqG_map = const std::map<seqG_ptr, seqG_ptr, std::greater<seqG_ptr>>;
 
 /**
-* This class allows to create a copy of a sequence graph. This modified copy is ready to record coverage
-* in gramtools quasimap.
+* This class contains an enriched copy of a sequence graph. It is ready to record coverage in gramtools quasimap.
 * The graph is built 'bubble-up', with children bubbles first. In each bubble,
 * each path thus becomes a linear traversal from bubble start to bubble end.
 **/
@@ -62,7 +61,7 @@ public:
 };
 
 /**
- * A class in charge of copying a sequence graph into a coverage graph
+ * A PRIVATE class in charge of mechanics of copying coverage graph from sequence graph
  *
  * Features:
  * - The nodes are compressed whenever possible, meaning connected nodes both with in and outdegree of 1 get joined.
@@ -84,6 +83,10 @@ public:
      */
     void parse_bubbles();
 
+    /**
+     * A linear traversal of one allele in a bubble.
+     * Any bubble encountered on the way have been mapped already & so are jumped.
+     */
     covG_ptr parse_allele(seqG_ptr const& bubble_end);
 
     /**
@@ -116,6 +119,8 @@ public:
 
     /**
      * Determine bubble end, either by creating it or re-using it
+     * We re-use it if we've already made a bubble that ends at the same node, or that starts at the same node,
+     * in the original sequence graph.
      */
     covG_ptr findBubbleEnd(seqG_ptr const &bubble_end);
 

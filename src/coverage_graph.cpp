@@ -23,7 +23,7 @@ bool operator>(const covG_ptr &lhs, const covG_ptr &rhs) {
 }
 
 coverage_Graph::coverage_Graph(sequence_Graph const &graph_in) {
-    // Throughout, we must distinguish between nodes in the constructor parameter's graph, // and nodes in the new graph.
+    // Throughout, we must distinguish between nodes in the constructor parameter's graph, and nodes in the new graph.
     cov_graph_Constructor constructor(this, graph_in);
 
     // Copy & wire all the bubbles
@@ -46,7 +46,7 @@ void cov_graph_Constructor::parse_bubbles() {
         site_ID++;
 
         // Make entry and exit points;
-        // The bubble exit is not initialised here, as it can have been made in a previous bubble.
+        // The bubble exit is not initialised here, as it can be known from a previous bubble.
         auto bubble_entry = std::make_shared<coverage_Node>(*s.first, site_ID, allele_ID);
         covG_ptr bubble_exit;
 
@@ -74,7 +74,7 @@ void cov_graph_Constructor::parse_bubbles() {
         bool first_allele{true};
         for (auto seed : s.first->next){
             cur_Node = seed;
-            if (first_allele){
+            if (first_allele){ // Specify the bubble exit node, once.
                 bubble_exit = findBubbleEnd(s.second);
                 first_allele = false;
             }
@@ -82,9 +82,9 @@ void cov_graph_Constructor::parse_bubbles() {
             parse_allele(s.second);
         }
 
+        // Register the copied bubble
         entry_translation_map.insert(std::make_pair(s.first, bubble_entry));
         bubble_exit = exit_translation_map.at(s.second);
-        // Register the bubble with the constructed graph
         to_construct->bubble_map.insert(std::make_pair(bubble_entry, bubble_exit));
     }
 }
@@ -94,8 +94,7 @@ covG_ptr cov_graph_Constructor::parse_allele(seqG_ptr const &bubble_end){
     seqBuffer = "";
     allele_ID++;
 
-    // Check for direct deletion
-    // And make sure there is sequence in paths that directly join bubble start to bubble end.
+    // Check for direct deletion and if present, make nodes with non-empty sequence
     if (deletion_bubble) {
         seqBuffer += deletion_prefix;
         if (cur_Node == bubble_end) {
@@ -105,10 +104,11 @@ covG_ptr cov_graph_Constructor::parse_allele(seqG_ptr const &bubble_end){
         }
     }
 
+    // Linear traversal to the end of the allele
     while (cur_Node != bubble_end) {
-        if (cur_Node->prev.size() >= 1 && cur_Node->next.size() == 1) {
+        if (cur_Node->next.size() == 1) {
             simpleAdvance();
-            // If we have reached the bubble end, we need to not skip processing the sequence buffer.
+            // If we have reached the bubble end, we need to look at the sequence buffer.
             if (cur_Node != bubble_end) continue;
         }
         if (seqBuffer.size() > 0) make_sequence();
@@ -196,8 +196,8 @@ covG_ptr cov_graph_Constructor::make_root(seqG_ptr const &in_root){
 }
 
 void cov_graph_Constructor::wire(covG_ptr& target){
-    backWire->next.insert(target);
-    target->prev.insert(backWire);
+    backWire->next.push_back(target);
+    target->prev.push_back(backWire);
 }
 
 covG_ptr cov_graph_Constructor::findBubbleEnd(seqG_ptr const &bubble_end){

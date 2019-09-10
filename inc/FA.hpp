@@ -40,7 +40,7 @@ public:
 
 private:
     std::string sequence;
-    std::set<seqG_ptr> next; // Outgoing edges
+    std::set<seqG_ptr> next; // Outgoing edges. We test membership during construction from MSA, so use a hash table.
     std::set<seqG_ptr> prev; // Incoming edges
     bool fixed_Point;
     int pos; // Alignment column number.

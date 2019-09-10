@@ -12,6 +12,10 @@ public:
     std::shared_ptr<T> next;
 };
 
+/**
+ * This class builds a PRG string from a directed, acyclic graph of sequence.
+ * It can do this from a sequence graph and a coverage graph both.
+ */
 template<typename graph_T, typename node_T>
 class stringified_PRG{
 public:
@@ -19,7 +23,7 @@ public:
     std::vector<uint64_t> prg;
 
 private:
-    /** Allows checking if an `auto_Node` has a `prg_Node`, in which case the `prg_Node` will be used.*/
+    /** Allows checking if a sequence node has a `prg_Node`, in which case the `prg_Node` will be used.*/
     std::unordered_map<std::shared_ptr<node_T>, prg_Node<node_T>*> prg_map;
 
     // A local reference to the in graph's structure

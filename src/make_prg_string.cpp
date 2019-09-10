@@ -62,7 +62,9 @@ void stringified_PRG<graph_T,node_T>::parse_bubble(std::shared_ptr<node_T> start
             while (nn != end_point) {
                 if (prg_map.find(nn) != prg_map.end()) {
                     auto p_Node = prg_map.at(nn);
-                    // The below assertion is a goal we need to achieve for sites to be unambiguously identified.
+                    // The below assertion is CRUCIAL: ideally, we want each bubble in the graph to be
+                    // associated with one, and one only, site ID.
+                    // This amounts to not using the same site more than ONCE in the PRG string.
                     assert(used_sites.find(nn) == used_sites.end());
                     used_sites.insert(nn);
                     alt.insert(alt.end(),p_Node->sequence.begin(),p_Node->sequence.end());
@@ -97,7 +99,7 @@ void stringified_PRG<graph_T,node_T>::parse_bubble(std::shared_ptr<node_T> start
         // Site entry marker
         prg_Seq.emplace_back(site_ID);
 
-        // Make sure we sort the alleles, so that unit testing is simplified.
+        // Sort the alleles, so that unit testing is simplified.
         std::sort(alts.begin(), alts.end());
         // Add the alleles
         for (auto s : alts){
@@ -139,7 +141,7 @@ std::vector<uint64_t> prg_string_to_ints(std::string const& string_prg){
     return encoded_prg;
 }
 
-// Define the template classes that can be used for linkage to occur
+// Define the template specialisations that can be, for linkage to occur
 template class stringified_PRG<sequence_Graph, auto_Node>;
 template class stringified_PRG<coverage_Graph, coverage_Node>;
 

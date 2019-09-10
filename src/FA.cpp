@@ -54,7 +54,6 @@ FA::FA(MSA &msa) {
 
             // If character indicating indel padding is found, do nothing for this characters.
             if (gapping_chars.find(l) != gapping_chars.end()) continue;
-            //if (gapping_chars.find(l) != gapping_chars.end()) l = '-';
 
             // Create a new node; and make it accessible.
             if (new_Nodes.find(l) == new_Nodes.end()) {
@@ -142,7 +141,6 @@ FA::FA(MSA &msa, seqG_ptr start_point,
     /**
      * Iteration: build nodes & edges
      */
-
     int end_point_pos;
     bool gap_found;
     bool irregular_buffer;
