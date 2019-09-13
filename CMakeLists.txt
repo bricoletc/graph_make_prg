@@ -1,6 +1,6 @@
 include(ExternalProject)
 cmake_minimum_required(VERSION 3.13)
-project(prg_msa)
+project(graph_make_prg)
 
 execute_process(COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/download)
 execute_process(COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/src)
@@ -23,13 +23,12 @@ set(EXTERNAL_INCLUDE_DIR
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_SYSTEM_NO_DEPRECATED -fopenmp -Wall -Wextra")
 
-
 # Make linkable library
-add_library(libprg_msa STATIC ${SOURCE_FILES})
-target_include_directories(libprg_msa PUBLIC ${INCLUDE} ${EXTERNAL_INCLUDE_DIR})
-add_dependencies(libprg_msa
+add_library(lmake_prg STATIC ${SOURCE_FILES})
+target_include_directories(lmake_prg PUBLIC ${INCLUDE} ${EXTERNAL_INCLUDE_DIR})
+add_dependencies(lmake_prg
         sdsl)
-target_link_libraries(libprg_msa
+target_link_libraries(lmake_prg
         ${CMAKE_THREAD_LIBS_INIT}
         ${Boost_FILESYSTEM_LIBRARY}
         ${Boost_LOG_LIBRARY}
@@ -40,9 +39,9 @@ target_link_libraries(libprg_msa
         )
 
 # Make executable program
-add_executable(prg_msa
+add_executable(make_prg
         ${SOURCE_FILES})
-target_link_libraries(prg_msa
+target_link_libraries(make_prg
         ${CMAKE_THREAD_LIBS_INIT}
         ${Boost_FILESYSTEM_LIBRARY}
         ${Boost_LOG_LIBRARY}
@@ -51,7 +50,7 @@ target_link_libraries(prg_msa
         ${CMAKE_DL_LIBS}
         ${CMAKE_CURRENT_BINARY_DIR}/lib/libsdsl.a
         )
-target_include_directories(prg_msa PUBLIC ${INCLUDE})
+target_include_directories(make_prg PUBLIC ${INCLUDE})
 
 #Tests
 enable_testing()
